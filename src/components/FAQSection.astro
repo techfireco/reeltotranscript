@@ -1,0 +1,83 @@
+---
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+const faqs: FAQItem[] = [
+  {
+    question: 'How do I transcribe an Instagram Reel to text?',
+    answer: 'Simply copy the link of any public Instagram Reel (from the app or web browser), paste it into Reeltotranscript, and click "Transcribe Reel". Alternatively, you can drop any downloaded video file (MP4, MOV) into the upload tab to transcribe it instantly.',
+  },
+  {
+    question: 'Is Reeltotranscript completely free?',
+    answer: 'Yes, 100% free with unlimited transcriptions. There are no paid tiers, subscription paywalls, watermarks, or user account requirements.',
+  },
+  {
+    question: 'Is my video or voice recording uploaded to any remote server?',
+    answer: 'No! When using our default In-Browser Whisper mode, all audio decoding and speech-to-text recognition runs locally on your computer or phone using Web Audio and Web Workers. Your data never leaves your device.',
+  },
+  {
+    question: 'Which AI speech model is used for transcription?',
+    answer: 'We utilize OpenAI Whisper neural networks running on Transformers.js and ONNX Runtime Web. You can choose between Whisper Tiny (~39MB for fast mobile transcription) and Whisper Base (~73MB for enhanced punctuation). An optional cloud Groq Whisper Large v3 option is also available.',
+  },
+  {
+    question: 'Can I export subtitles as an SRT or VTT file for video editing?',
+    answer: 'Yes! Reeltotranscript generates millisecond-accurate timestamps and allows one-click export of .SRT and .VTT subtitle files ready to drag into CapCut, Adobe Premiere Pro, Final Cut Pro, or DaVinci Resolve.',
+  },
+  {
+    question: 'Does Reeltotranscript support other languages besides English?',
+    answer: 'Yes, OpenAI Whisper natively recognizes 90+ spoken languages including Spanish, Hindi, French, German, Japanese, Portuguese, Italian, Arabic, Mandarin, and Russian.',
+  },
+  {
+    question: 'What should I do if Instagram restricts downloading a Reel link?',
+    answer: 'If Instagram temporarily throttles or restricts automated access to a specific link, simply save or screen-record the Reel on your phone/computer and drop the MP4 or video file into the "Upload Video / Audio" tab. Browser-based transcription will process it instantly.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  'mainEntity': faqs.map((f) => ({
+    '@type': 'Question',
+    'name': f.question,
+    'acceptedAnswer': {
+      '@type': 'Answer',
+      'text': f.answer,
+    },
+  })),
+};
+---
+
+<section class="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-20 border-t border-neutral-200/80 dark:border-neutral-800">
+  <!-- FAQ JSON-LD Structured Data -->
+  <script type="application/ld+json" set:html={JSON.stringify(faqSchema)} />
+
+  <div class="text-center max-w-2xl mx-auto mb-12">
+    <p class="text-xs font-semibold uppercase tracking-wider text-[#0066cc] dark:text-[#2997ff] mb-2">Common Questions</p>
+    <h2 class="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-900 dark:text-white">
+      Frequently Asked Questions
+    </h2>
+    <p class="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+      Learn how client-side Whisper transcription works and how to make the most of Reeltotranscript.
+    </p>
+  </div>
+
+  <div class="space-y-4">
+    {faqs.map((item, idx) => (
+      <details class="group p-5 rounded-2xl bg-neutral-50/70 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 transition-all [&_summary::-webkit-details-marker]:hidden">
+        <summary class="flex items-center justify-between cursor-pointer list-none font-medium text-sm sm:text-base text-neutral-900 dark:text-white">
+          <span>{item.question}</span>
+          <span class="ml-4 flex-shrink-0 transition-transform duration-200 group-open:rotate-180 text-neutral-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </span>
+        </summary>
+        <p class="mt-3 text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-200/50 dark:border-neutral-800/50 pt-3">
+          {item.answer}
+        </p>
+      </details>
+    ))}
+  </div>
+</section>

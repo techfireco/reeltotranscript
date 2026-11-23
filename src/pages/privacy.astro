@@ -1,0 +1,66 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout
+  title="Privacy Policy — Reeltotranscript"
+  description="Reeltotranscript privacy policy: We do not store, log, or sell your audio, video, or personal data. 100% client-side privacy."
+  canonicalPath="/privacy"
+>
+  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
+    <div class="mb-10">
+      <p class="text-xs font-semibold uppercase tracking-wider text-[#0066cc] dark:text-[#2997ff] mb-2">Legal Transparency</p>
+      <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-neutral-900 dark:text-white">
+        Privacy Policy
+      </h1>
+      <p class="mt-2 text-xs text-neutral-500">Last updated: November 2026</p>
+    </div>
+
+    <div class="prose dark:prose-invert max-w-none text-sm text-neutral-700 dark:text-neutral-300 space-y-6 leading-relaxed">
+      <section class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+        <h2 class="text-base font-semibold text-neutral-900 dark:text-white">1. Core Philosophy: Client-Side Processing</h2>
+        <p>
+          At Reeltotranscript (accessible from https://reeltotranscript.com), the privacy of our visitors is our primary priority. Unlike traditional transcription services that require uploading your media to remote cloud servers, Reeltotranscript utilizes browser-based WebAssembly and Web Audio to process audio directly on your local device.
+        </p>
+        <p>
+          <strong>Your video files, audio tracks, and transcribed texts are never sent to or stored on our servers.</strong> Once you close or refresh your browser tab, all temporary audio buffers are permanently discarded from device memory.
+        </p>
+      </section>
+
+      <section class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+        <h2 class="text-base font-semibold text-neutral-900 dark:text-white">2. Information We Do Not Collect</h2>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>We do not collect names, passwords, or personal identity credentials.</li>
+          <li>We do not record, store, or monitor your speech, voice recordings, or transcripts.</li>
+          <li>We do not require payment information, credit cards, or billing addresses.</li>
+          <li>We do not access or store your Instagram or social media login credentials.</li>
+        </ul>
+      </section>
+
+      <section class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+        <h2 class="text-base font-semibold text-neutral-900 dark:text-white">3. Local Storage</h2>
+        <p>
+          We use browser <code>localStorage</code> strictly for non-invasive user preferences:
+        </p>
+        <ul class="list-disc pl-5 space-y-1">
+          <li>Saving your chosen visual theme (Light or Dark mode).</li>
+          <li>Saving your optional user-provided API key (if you explicitly opt-in to use Groq cloud inference). This key never leaves your browser and can be cleared at any time.</li>
+        </ul>
+      </section>
+
+      <section class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+        <h2 class="text-base font-semibold text-neutral-900 dark:text-white">4. Third-Party Analytics & Advertising</h2>
+        <p>
+          To maintain server uptime and understand aggregated web traffic, we may utilize standard privacy-preserving analytics and Google AdSense to serve non-intrusive advertisements. Third-party vendors, including Google, use cookies to serve ads based on prior visits to our website or other sites. Users may opt out of personalized advertising by visiting Google Ads Settings.
+        </p>
+      </section>
+
+      <section class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800 space-y-3">
+        <h2 class="text-base font-semibold text-neutral-900 dark:text-white">5. Contact Information</h2>
+        <p>
+          If you have any questions or feedback regarding this Privacy Policy, please contact us via email at: <a href="mailto:hello@reeltotranscript.com" class="text-[#0066cc] dark:text-[#2997ff] hover:underline font-medium">hello@reeltotranscript.com</a>.
+        </p>
+      </section>
+    </div>
+  </div>
+</Layout>

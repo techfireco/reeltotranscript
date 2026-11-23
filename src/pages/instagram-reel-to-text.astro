@@ -1,0 +1,38 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReelTranscriber from '../components/ReelTranscriber.astro';
+import FeaturesSection from '../components/FeaturesSection.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQSection from '../components/FAQSection.astro';
+---
+
+<Layout
+  title="Instagram Reel to Text Converter — Free In-Browser Transcriber"
+  description="Convert any Instagram Reel into clean, written text. Perfect for blog posts, newsletters, quotes, and research. Powered by private client-side OpenAI Whisper AI."
+  keywords="instagram reel to text, convert reel to text, instagram video to text converter, extract text from instagram reel, transcribe instagram reel free"
+  canonicalPath="/instagram-reel-to-text"
+>
+  <ReelTranscriber
+    headline="Convert Instagram Reels to Clean Text"
+    subheadline="Extract every spoken word from any Instagram Reel into readable text paragraphs. 100% private in-browser transcription with OpenAI Whisper — free, instant, and no login required."
+  />
+
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 border-t border-neutral-200/80 dark:border-neutral-800">
+    <div class="prose dark:prose-invert max-w-none text-sm text-neutral-600 dark:text-neutral-400 space-y-4">
+      <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Why Convert Instagram Reels to Text?</h2>
+      <p>
+        Instagram Reels are packed with valuable tutorials, market commentary, recipe directions, and educational talks. However, video content cannot be easily skimmed, copied, or indexed by search engines. By converting Reels into clean text, you can:
+      </p>
+      <ul class="list-disc pl-5 space-y-1">
+        <li>Repurpose viral video ideas into Twitter/X threads, LinkedIn posts, or newsletter articles.</li>
+        <li>Quickly quote key moments and citations without re-watching long clips.</li>
+        <li>Make content accessible for deaf and hard-of-hearing readers.</li>
+        <li>Archive important creator insights for your personal knowledge base (Notion, Obsidian, Apple Notes).</li>
+      </ul>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <FeaturesSection />
+  <FAQSection />
+</Layout>

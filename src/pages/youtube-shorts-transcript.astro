@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReelTranscriber from '../components/ReelTranscriber.astro';
+import FeaturesSection from '../components/FeaturesSection.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQSection from '../components/FAQSection.astro';
+---
+
+<Layout
+  title="YouTube Shorts to Transcript Generator — Free In-Browser Tool"
+  description="Transcribe YouTube Shorts video audio to text and subtitles in seconds. Free, unlimited, and powered by OpenAI Whisper running locally in your browser."
+  keywords="youtube shorts transcript, transcribe youtube shorts, youtube shorts to text, extract text from shorts, shorts subtitle generator"
+  canonicalPath="/youtube-shorts-transcript"
+>
+  <ReelTranscriber
+    headline="YouTube Shorts to Transcript in Seconds"
+    subheadline="Convert any YouTube Shorts or vertical short-form video into accurate text and SRT subtitles. Fast, 100% private, and runs entirely in your web browser."
+  />
+
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 border-t border-neutral-200/80 dark:border-neutral-800">
+    <div class="prose dark:prose-invert max-w-none text-sm text-neutral-600 dark:text-neutral-400 space-y-4">
+      <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Why Transcribe YouTube Shorts?</h2>
+      <p>
+        YouTube Shorts algorithms reward accessibility, high completion rates, and keyword-rich descriptions. Generating an accurate transcript allows creators to extract SEO keywords, craft engaging descriptions, and create translated subtitles for global reach.
+      </p>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <FeaturesSection />
+  <FAQSection />
+</Layout>

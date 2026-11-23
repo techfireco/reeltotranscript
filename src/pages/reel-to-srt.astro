@@ -1,0 +1,42 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReelTranscriber from '../components/ReelTranscriber.astro';
+import FeaturesSection from '../components/FeaturesSection.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQSection from '../components/FAQSection.astro';
+---
+
+<Layout
+  title="Instagram Reel to SRT Generator — Free Auto Captions Subtitle Maker"
+  description="Generate accurate .SRT and .VTT subtitle files with millisecond timestamps from any Instagram Reel or video. Ready to import into CapCut, Premiere, and Final Cut Pro."
+  keywords="reel to srt, instagram reel subtitle generator, convert reel to srt, auto caption reel srt, srt generator for reels, download reel srt free"
+  canonicalPath="/reel-to-srt"
+>
+  <ReelTranscriber
+    headline="Generate Accurate .SRT Subtitles from Reels"
+    subheadline="Create millisecond-accurate subtitle files for your Instagram Reels and short videos. Download .SRT or .VTT files ready for CapCut, Premiere Pro, and DaVinci Resolve."
+  />
+
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 border-t border-neutral-200/80 dark:border-neutral-800">
+    <div class="prose dark:prose-invert max-w-none text-sm text-neutral-600 dark:text-neutral-400 space-y-4">
+      <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Professional Subtitles for Video Creators</h2>
+      <p>
+        Over 80% of mobile users watch social media videos on mute. Having accurate, synchronized captions is essential for viewer retention and engagement. With our free Reel to SRT generator:
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-700/60">
+          <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">Millisecond Accuracy</h3>
+          <p class="text-xs text-neutral-500 mt-1">Timestamps match exact speech inflections without manual timing alignment.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800/40 border border-neutral-200 dark:border-neutral-700/60">
+          <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">Direct Video NLE Import</h3>
+          <p class="text-xs text-neutral-500 mt-1">Standard SubRip (.srt) and WebVTT (.vtt) format supported by every major editing suite.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <FeaturesSection />
+  <FAQSection />
+</Layout>

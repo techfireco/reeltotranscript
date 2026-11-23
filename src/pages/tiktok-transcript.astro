@@ -1,0 +1,32 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReelTranscriber from '../components/ReelTranscriber.astro';
+import FeaturesSection from '../components/FeaturesSection.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQSection from '../components/FAQSection.astro';
+---
+
+<Layout
+  title="TikTok to Transcript — Free TikTok Video to Text & SRT Subtitles"
+  description="Convert TikTok videos into accurate text transcripts and SRT subtitles. Runs private OpenAI Whisper speech recognition in your browser. No registration required."
+  keywords="tiktok transcript, tiktok to text, transcribe tiktok video, extract text from tiktok, tiktok srt subtitle maker, convert tiktok to transcript"
+  canonicalPath="/tiktok-transcript"
+>
+  <ReelTranscriber
+    headline="Transcribe TikTok Videos to Text & Captions"
+    subheadline="Extract every spoken word from TikTok clips with OpenAI Whisper. Instant, private, and unlimited — download text paragraphs or timestamped SRT subtitles."
+  />
+
+  <section class="max-w-4xl mx-auto px-4 sm:px-6 py-12 border-t border-neutral-200/80 dark:border-neutral-800">
+    <div class="prose dark:prose-invert max-w-none text-sm text-neutral-600 dark:text-neutral-400 space-y-4">
+      <h2 class="text-xl font-semibold text-neutral-900 dark:text-white">Transcribe Fast-Paced TikTok Speech</h2>
+      <p>
+        TikTok creators speak fast, often with background beats or trendy slang. OpenAI Whisper is trained on hundreds of thousands of hours of diverse speech, enabling it to accurately pick up nuances, accents, and casual phrasing that standard speech-to-text engines miss.
+      </p>
+    </div>
+  </section>
+
+  <HowItWorks />
+  <FeaturesSection />
+  <FAQSection />
+</Layout>

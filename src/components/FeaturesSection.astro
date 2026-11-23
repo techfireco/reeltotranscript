@@ -1,0 +1,60 @@
+---
+const features = [
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>`,
+    title: '100% Client-Side Privacy',
+    desc: 'Audio is decoded and transcribed entirely inside your web browser using Web Workers. Your personal video and voice data never touches an external server.',
+  },
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>`,
+    title: 'OpenAI Whisper Model',
+    desc: 'Powered by state-of-the-art OpenAI Whisper neural speech recognition (via Transformers.js and ONNX Runtime) with industry-leading punctuation and accuracy.',
+  },
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>`,
+    title: 'Export SRT & VTT Subtitles',
+    desc: 'Generate millisecond-precise subtitle files (.srt and .vtt) ready to import directly into Premiere Pro, Final Cut, CapCut, or DaVinci Resolve.',
+  },
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"/></svg>`,
+    title: 'Multi-Language Speech Support',
+    desc: 'Automatically recognizes and transcribes speech across 90+ languages, including English, Spanish, Hindi, French, German, Japanese, Portuguese, and Mandarin.',
+  },
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+    title: 'Free Forever · No Sign-Up',
+    desc: 'No credit card, no registration, and no hidden monthly fees. Enjoy unlimited reel transcriptions without usage paywalls.',
+  },
+  {
+    icon: `<svg class="w-5 h-5 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>`,
+    title: 'Clean Audio Extraction',
+    desc: 'Extract crystal-clear 16kHz uncompressed WAV audio directly from video files for sound editing, podcasts, or voice note archiving.',
+  },
+];
+---
+
+<section class="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24 border-t border-neutral-200/80 dark:border-neutral-800">
+  <div class="text-center max-w-2xl mx-auto mb-14">
+    <p class="text-xs font-semibold uppercase tracking-wider text-[#0066cc] dark:text-[#2997ff] mb-2">Designed for Creators</p>
+    <h2 class="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-900 dark:text-white">
+      Everything you need to turn Reels into text
+    </h2>
+    <p class="mt-3 text-sm sm:text-base text-neutral-600 dark:text-neutral-400">
+      Built for video editors, social media managers, podcasters, researchers, and deaf/hard-of-hearing audiences.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+    {features.map((feat) => (
+      <div class="p-6 rounded-2xl bg-neutral-50/60 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800/80 hover:border-neutral-300 dark:hover:border-neutral-700 transition">
+        <div class="w-10 h-10 rounded-xl bg-white dark:bg-[#252528] border border-neutral-200 dark:border-neutral-700/60 flex items-center justify-center mb-4 shadow-sm" set:html={feat.icon} />
+        <h3 class="text-base font-semibold text-neutral-900 dark:text-white mb-2">
+          {feat.title}
+        </h3>
+        <p class="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+          {feat.desc}
+        </p>
+      </div>
+    ))}
+  </div>
+</section>

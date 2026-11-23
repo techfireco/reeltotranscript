@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ReelTranscriber from '../components/ReelTranscriber.astro';
+import FeaturesSection from '../components/FeaturesSection.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import FAQSection from '../components/FAQSection.astro';
+---
+
+<Layout
+  title="Reeltotranscript — Free In-Browser Instagram Reel to Text & SRT Subtitles"
+  description="Convert Instagram Reels, TikToks, and short videos into clean text and SRT subtitles. Runs open-source OpenAI Whisper locally in your browser. 100% private, free, and unlimited."
+  canonicalPath="/"
+>
+  <!-- Main Interactive Tool -->
+  <ReelTranscriber
+    headline="Transcribe any Reel in seconds."
+    subheadline="Paste any Instagram Reel link or drop a video file. Speech is transcribed locally inside your browser using OpenAI Whisper — zero server uploads, 100% private, and free forever."
+  />
+
+  <!-- How it Works 3 Steps -->
+  <HowItWorks />
+
+  <!-- Features Grid -->
+  <FeaturesSection />
+
+  <!-- FAQ with JSON-LD -->
+  <FAQSection />
+</Layout>

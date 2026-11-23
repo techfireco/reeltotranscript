@@ -1,0 +1,964 @@
+---
+interface Props {
+  defaultMode?: 'reel' | 'text' | 'srt' | 'audio' | 'shorts' | 'tiktok';
+  headline?: string;
+  subheadline?: string;
+}
+
+const {
+  defaultMode = 'reel',
+  headline = 'Transcribe Instagram Reels to Text & Subtitles',
+  subheadline = 'Paste any Instagram Reel link or drop a video file. Runs open-source OpenAI Whisper locally in your browser — private, free, and unlimited.',
+} = Astro.props;
+---
+
+<div id="reel-transcriber-app" class="w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+  <!-- Hero Heading -->
+  <div class="text-center max-w-3xl mx-auto mb-8 sm:mb-12">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold tracking-wide uppercase bg-[#0066cc]/10 dark:bg-[#2997ff]/10 text-[#0066cc] dark:text-[#2997ff] mb-4">
+      <span class="w-2 h-2 rounded-full bg-[#0066cc] dark:bg-[#2997ff]"></span>
+      Local In-Browser AI · No Sign-Up
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-semibold tracking-tight text-neutral-900 dark:text-white leading-[1.12]">
+      {headline}
+    </h1>
+    <p class="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto leading-relaxed">
+      {subheadline}
+    </p>
+  </div>
+
+  <!-- Main Card Container -->
+  <div class="rounded-3xl border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-[#1c1c1e] shadow-xl shadow-black/5 dark:shadow-none overflow-hidden transition-all">
+    <!-- Mode Tabs -->
+    <div class="flex border-b border-neutral-200/80 dark:border-neutral-800 bg-neutral-50/70 dark:bg-[#161617]/70 p-1.5 gap-1 text-sm font-medium">
+      <button
+        id="tab-btn-url"
+        type="button"
+        class="flex-1 py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all bg-white dark:bg-[#2c2c2e] text-neutral-900 dark:text-white shadow-sm"
+      >
+        <svg class="w-4 h-4 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+        </svg>
+        <span>Paste Reel Link</span>
+      </button>
+
+      <button
+        id="tab-btn-file"
+        type="button"
+        class="flex-1 py-2.5 px-4 rounded-2xl flex items-center justify-center gap-2 transition-all text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <span>Upload Video / Audio</span>
+      </button>
+
+      <button
+        id="tab-btn-sample"
+        type="button"
+        class="hidden sm:flex flex-1 py-2.5 px-4 rounded-2xl items-center justify-center gap-2 transition-all text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>Try Sample Reel</span>
+      </button>
+    </div>
+
+    <!-- Input Section Content -->
+    <div class="p-6 sm:p-8 space-y-6">
+      <!-- 1. URL Input Panel -->
+      <div id="panel-url" class="space-y-4">
+        <div class="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-neutral-400">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+              </svg>
+            </div>
+            <input
+              id="reel-url-input"
+              type="url"
+              placeholder="https://www.instagram.com/reel/C... or TikTok / YouTube Shorts"
+              class="w-full pl-11 pr-24 py-3.5 rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-50/50 dark:bg-[#252528] text-neutral-900 dark:text-white placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-[#0066cc] dark:focus:ring-[#2997ff] text-sm transition"
+            />
+            <button
+              id="paste-btn"
+              type="button"
+              class="absolute inset-y-1.5 right-1.5 px-3 py-1 rounded-full text-xs font-medium text-neutral-600 dark:text-neutral-300 bg-neutral-200/70 dark:bg-neutral-700/70 hover:bg-neutral-300 dark:hover:bg-neutral-600 transition flex items-center gap-1"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Paste
+            </button>
+          </div>
+
+          <button
+            id="start-url-btn"
+            type="button"
+            class="px-7 py-3.5 rounded-full font-medium text-sm text-white bg-[#0066cc] dark:bg-[#2997ff] hover:bg-[#0071e3] dark:hover:bg-[#1a85ea] active:scale-[0.98] transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Transcribe Reel</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+        <p class="text-xs text-neutral-500 dark:text-neutral-400 pl-2">
+          Supports Instagram Reels (instagram.com/reel/...), Posts, TikTok, and direct video links.
+        </p>
+      </div>
+
+      <!-- 2. File Upload Panel -->
+      <div id="panel-file" class="hidden space-y-4">
+        <div
+          id="dropzone"
+          class="border-2 border-dashed border-neutral-300 dark:border-neutral-700 hover:border-[#0066cc] dark:hover:border-[#2997ff] rounded-2xl p-8 sm:p-12 text-center transition-colors cursor-pointer bg-neutral-50/50 dark:bg-[#252528]/50"
+        >
+          <input
+            id="file-input"
+            type="file"
+            accept="video/*,audio/*,.mp4,.mov,.webm,.m4a,.mp3,.wav"
+            class="hidden"
+          />
+          <div class="w-12 h-12 mx-auto rounded-full bg-[#0066cc]/10 dark:bg-[#2997ff]/10 text-[#0066cc] dark:text-[#2997ff] flex items-center justify-center mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+            </svg>
+          </div>
+          <p class="text-sm font-medium text-neutral-900 dark:text-white">
+            Click to upload or drag & drop Reel video
+          </p>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
+            MP4, MOV, WebM, MP3, M4A, or WAV (Audio decoded 100% locally in browser)
+          </p>
+        </div>
+      </div>
+
+      <!-- 3. Sample Reel Panel -->
+      <div id="panel-sample" class="hidden space-y-3">
+        <div class="p-5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700/60 flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-semibold text-neutral-900 dark:text-white">Sample Reel: "Productivity Habits for 2026"</h4>
+            <p class="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">High quality 15-second voice reel sample to test in-browser Whisper.</p>
+          </div>
+          <button
+            id="load-sample-btn"
+            type="button"
+            class="px-4 py-2 rounded-full text-xs font-semibold bg-[#0066cc] dark:bg-[#2997ff] text-white hover:bg-[#0071e3] transition cursor-pointer"
+          >
+            Load & Transcribe
+          </button>
+        </div>
+      </div>
+
+      <!-- Settings & Engine Accordion -->
+      <div class="pt-2 border-t border-neutral-200/60 dark:border-neutral-800/60">
+        <button
+          id="toggle-settings-btn"
+          type="button"
+          class="w-full flex items-center justify-between text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white py-1"
+        >
+          <span class="flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span>Model & AI Engine Settings</span>
+            <span id="current-engine-pill" class="ml-2 px-2 py-0.5 rounded-full text-[10px] bg-neutral-200 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
+              Browser Whisper (Tiny)
+            </span>
+          </span>
+          <svg id="settings-chevron" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+
+        <div id="settings-panel" class="hidden pt-4 pb-2 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <!-- Engine Selection -->
+          <div>
+            <label class="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">Whisper Engine</label>
+            <select
+              id="engine-select"
+              class="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252528] text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]"
+            >
+              <option value="browser" selected>In-Browser (100% Free & Private)</option>
+              <option value="groq">Groq Cloud (Whisper Large v3 - Fast)</option>
+            </select>
+          </div>
+
+          <!-- Model Choice -->
+          <div>
+            <label class="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">In-Browser Model</label>
+            <select
+              id="model-select"
+              class="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252528] text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]"
+            >
+              <option value="onnx-community/whisper-tiny" selected>Whisper Tiny (~39MB - Fastest)</option>
+              <option value="onnx-community/whisper-base">Whisper Base (~73MB - Balanced)</option>
+            </select>
+          </div>
+
+          <!-- Spoken Language -->
+          <div>
+            <label class="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">Language</label>
+            <select
+              id="language-select"
+              class="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252528] text-neutral-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#0066cc]"
+            >
+              <option value="auto" selected>Auto-Detect Language</option>
+              <option value="english">English</option>
+              <option value="spanish">Spanish</option>
+              <option value="hindi">Hindi</option>
+              <option value="french">French</option>
+              <option value="german">German</option>
+              <option value="japanese">Japanese</option>
+              <option value="portuguese">Portuguese</option>
+              <option value="italian">Italian</option>
+              <option value="chinese">Chinese</option>
+              <option value="russian">Russian</option>
+              <option value="arabic">Arabic</option>
+            </select>
+          </div>
+
+          <!-- Optional Groq API Key Input -->
+          <div id="groq-key-container" class="hidden sm:col-span-3 pt-2">
+            <label class="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
+              Free Groq API Key (Optional for Whisper Large v3)
+            </label>
+            <input
+              id="groq-api-key"
+              type="password"
+              placeholder="gsk_..."
+              class="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252528] text-neutral-900 dark:text-white text-xs"
+            />
+            <p class="text-[11px] text-neutral-500 mt-1">
+              Saved strictly in your browser's localStorage. Never sent to any server. Get a free key at console.groq.com.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Progress Bar & Status -->
+      <div id="progress-container" class="hidden space-y-3 pt-2">
+        <div class="flex items-center justify-between text-xs font-medium text-neutral-700 dark:text-neutral-300">
+          <span id="progress-status-text" class="flex items-center gap-2">
+            <svg class="w-4 h-4 animate-spin text-[#0066cc] dark:text-[#2997ff]" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span>Extracting audio from Reel...</span>
+          </span>
+          <span id="progress-percent-text" class="font-mono text-neutral-500">0%</span>
+        </div>
+        <div class="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div
+            id="progress-bar-fill"
+            class="h-full bg-gradient-to-r from-[#0066cc] to-[#2997ff] rounded-full transition-all duration-300"
+            style="width: 0%"
+          ></div>
+        </div>
+        <p id="progress-sub-text" class="text-[11px] text-neutral-500 dark:text-neutral-400">
+          Downloading Whisper model directly into browser cache. First run takes ~5-15s, future runs are instantaneous.
+        </p>
+      </div>
+
+      <!-- Error Alert Box -->
+      <div id="error-box" class="hidden p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-xs leading-relaxed">
+        <div class="flex items-start gap-2.5">
+          <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div class="flex-1">
+            <p id="error-message" class="font-medium"></p>
+            <div id="error-fallback-action" class="mt-2 hidden">
+              <button
+                id="error-switch-file-btn"
+                type="button"
+                class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 font-semibold hover:bg-red-200 transition"
+              >
+                Switch to File Upload Tab
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Output & Results Section (Revealed when transcript is ready) -->
+    <div id="results-container" class="hidden border-t border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-[#161617]/50 p-6 sm:p-8 space-y-6">
+      <!-- Media Header & Stats -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+              ✓ Transcription Ready
+            </span>
+            <span id="stats-time-pill" class="text-xs text-neutral-500 font-mono">
+              Processed in 2.4s
+            </span>
+          </div>
+          <h3 id="result-title" class="text-base font-semibold text-neutral-900 dark:text-white mt-1">
+            Instagram Reel Transcript
+          </h3>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="flex items-center gap-4 text-xs text-neutral-600 dark:text-neutral-400">
+          <div><strong id="stat-words" class="text-neutral-900 dark:text-white font-semibold">0</strong> words</div>
+          <div>·</div>
+          <div><strong id="stat-duration" class="text-neutral-900 dark:text-white font-semibold">0s</strong> audio</div>
+          <div>·</div>
+          <div><strong id="stat-engine" class="text-neutral-900 dark:text-white font-semibold">Whisper Tiny</strong></div>
+        </div>
+      </div>
+
+      <!-- Synchronized Audio / Video Player -->
+      <div id="player-container" class="hidden p-4 rounded-2xl bg-white dark:bg-[#252528] border border-neutral-200 dark:border-neutral-700/60">
+        <video id="result-video" controls class="w-full max-h-64 rounded-xl mx-auto hidden"></video>
+        <audio id="result-audio" controls class="w-full mt-2 hidden"></audio>
+      </div>
+
+      <!-- View Format Switcher & Actions -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- View Tabs -->
+        <div class="flex items-center bg-neutral-200/70 dark:bg-neutral-800 p-1 rounded-xl text-xs font-medium">
+          <button id="view-tab-text" type="button" class="px-3 py-1.5 rounded-lg bg-white dark:bg-[#2c2c2e] text-neutral-900 dark:text-white shadow-sm transition">
+            Paragraphs
+          </button>
+          <button id="view-tab-timestamps" type="button" class="px-3 py-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition">
+            Timestamps
+          </button>
+          <button id="view-tab-srt" type="button" class="px-3 py-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition">
+            SRT Subtitles
+          </button>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            id="copy-transcript-btn"
+            type="button"
+            class="px-4 py-2 rounded-full text-xs font-semibold bg-[#0066cc] dark:bg-[#2997ff] text-white hover:bg-[#0071e3] transition flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/>
+            </svg>
+            <span id="copy-btn-label">Copy Transcript</span>
+          </button>
+
+          <button
+            id="download-txt-btn"
+            type="button"
+            class="px-3.5 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+          >
+            .TXT
+          </button>
+
+          <button
+            id="download-srt-btn"
+            type="button"
+            class="px-3.5 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+          >
+            .SRT
+          </button>
+
+          <button
+            id="download-vtt-btn"
+            type="button"
+            class="px-3.5 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+          >
+            .VTT
+          </button>
+
+          <button
+            id="download-audio-btn"
+            type="button"
+            class="hidden sm:inline-flex px-3.5 py-2 rounded-full text-xs font-medium bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+          >
+            Audio (.WAV)
+          </button>
+        </div>
+      </div>
+
+      <!-- Transcript View Box -->
+      <div class="relative rounded-2xl border border-neutral-200 dark:border-neutral-700/80 bg-white dark:bg-[#1c1c1e] p-5 max-h-96 overflow-y-auto custom-scrollbar">
+        <!-- 1. Text Paragraphs View -->
+        <div id="content-view-text" class="text-sm leading-relaxed text-neutral-800 dark:text-neutral-200 whitespace-pre-wrap select-text"></div>
+
+        <!-- 2. Timestamps Segment View -->
+        <div id="content-view-timestamps" class="hidden space-y-2"></div>
+
+        <!-- 3. Raw SRT View -->
+        <pre id="content-view-srt" class="hidden font-mono text-xs text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed select-text"></pre>
+      </div>
+
+      <!-- AI Quick Actions Bar -->
+      <div class="p-4 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-700/60 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            AI Post-Processing Tools
+          </span>
+          <span class="text-[11px] text-neutral-500">1-click formatting</span>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button
+            id="ai-summary-btn"
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition"
+          >
+            📋 Summarize Key Takeaways
+          </button>
+          <button
+            id="ai-caption-btn"
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition"
+          >
+            📱 Generate Instagram Caption & Tags
+          </button>
+          <button
+            id="ai-clean-btn"
+            type="button"
+            class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition"
+          >
+            ✨ Clean Filler Words
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { extractAudioFromBlob, chunksToSRT, chunksToVTT, pcmToWavBlob, formatSRTTimestamp } from '../lib/audio-extractor';
+  import { transcriberService, type TranscriptionResult } from '../lib/transcriber';
+  import { resolveReel } from '../lib/reel-downloader';
+
+  // State
+  let currentAudioSamples: Float32Array | null = null;
+  let currentAudioDuration = 0;
+  let currentResult: TranscriptionResult | null = null;
+  let activeAudioWavBlob: Blob | null = null;
+  let currentVideoBlobUrl: string | null = null;
+
+  // DOM Elements
+  const tabBtnUrl = document.getElementById('tab-btn-url');
+  const tabBtnFile = document.getElementById('tab-btn-file');
+  const tabBtnSample = document.getElementById('tab-btn-sample');
+
+  const panelUrl = document.getElementById('panel-url');
+  const panelFile = document.getElementById('panel-file');
+  const panelSample = document.getElementById('panel-sample');
+
+  const reelUrlInput = document.getElementById('reel-url-input') as HTMLInputElement;
+  const pasteBtn = document.getElementById('paste-btn');
+  const startUrlBtn = document.getElementById('start-url-btn');
+
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input') as HTMLInputElement;
+  const loadSampleBtn = document.getElementById('load-sample-btn');
+
+  const toggleSettingsBtn = document.getElementById('toggle-settings-btn');
+  const settingsPanel = document.getElementById('settings-panel');
+  const settingsChevron = document.getElementById('settings-chevron');
+  const engineSelect = document.getElementById('engine-select') as HTMLSelectElement;
+  const modelSelect = document.getElementById('model-select') as HTMLSelectElement;
+  const languageSelect = document.getElementById('language-select') as HTMLSelectElement;
+  const groqKeyContainer = document.getElementById('groq-key-container');
+  const groqApiKeyInput = document.getElementById('groq-api-key') as HTMLInputElement;
+  const currentEnginePill = document.getElementById('current-engine-pill');
+
+  const progressContainer = document.getElementById('progress-container');
+  const progressStatusText = document.getElementById('progress-status-text') as HTMLElement;
+  const progressPercentText = document.getElementById('progress-percent-text') as HTMLElement;
+  const progressBarFill = document.getElementById('progress-bar-fill') as HTMLElement;
+  const progressSubText = document.getElementById('progress-sub-text') as HTMLElement;
+
+  const errorBox = document.getElementById('error-box');
+  const errorMessage = document.getElementById('error-message');
+  const errorFallbackAction = document.getElementById('error-fallback-action');
+  const errorSwitchFileBtn = document.getElementById('error-switch-file-btn');
+
+  const resultsContainer = document.getElementById('results-container');
+  const resultTitle = document.getElementById('result-title');
+  const statsTimePill = document.getElementById('stats-time-pill');
+  const statWords = document.getElementById('stat-words');
+  const statDuration = document.getElementById('stat-duration');
+  const statEngine = document.getElementById('stat-engine');
+
+  const playerContainer = document.getElementById('player-container');
+  const resultVideo = document.getElementById('result-video') as HTMLVideoElement;
+  const resultAudio = document.getElementById('result-audio') as HTMLAudioElement;
+
+  const viewTabText = document.getElementById('view-tab-text');
+  const viewTabTimestamps = document.getElementById('view-tab-timestamps');
+  const viewTabSrt = document.getElementById('view-tab-srt');
+
+  const contentViewText = document.getElementById('content-view-text');
+  const contentViewTimestamps = document.getElementById('content-view-timestamps');
+  const contentViewSrt = document.getElementById('content-view-srt');
+
+  const copyTranscriptBtn = document.getElementById('copy-transcript-btn');
+  const copyBtnLabel = document.getElementById('copy-btn-label');
+  const downloadTxtBtn = document.getElementById('download-txt-btn');
+  const downloadSrtBtn = document.getElementById('download-srt-btn');
+  const downloadVttBtn = document.getElementById('download-vtt-btn');
+  const downloadAudioBtn = document.getElementById('download-audio-btn');
+
+  const aiSummaryBtn = document.getElementById('ai-summary-btn');
+  const aiCaptionBtn = document.getElementById('ai-caption-btn');
+  const aiCleanBtn = document.getElementById('ai-clean-btn');
+
+  // Load saved Groq key from localStorage
+  if (groqApiKeyInput) {
+    const savedKey = localStorage.getItem('groq_api_key');
+    if (savedKey) groqApiKeyInput.value = savedKey;
+    groqApiKeyInput.addEventListener('change', () => {
+      localStorage.setItem('groq_api_key', groqApiKeyInput.value.trim());
+    });
+  }
+
+  // Tab switching
+  function switchTab(activeTab: 'url' | 'file' | 'sample') {
+    const activeClasses = ['bg-white', 'dark:bg-[#2c2c2e]', 'text-neutral-900', 'dark:text-white', 'shadow-sm'];
+    const inactiveClasses = ['text-neutral-600', 'dark:text-neutral-400'];
+
+    [tabBtnUrl, tabBtnFile, tabBtnSample].forEach((btn) => {
+      btn?.classList.remove(...activeClasses);
+      btn?.classList.add(...inactiveClasses);
+    });
+
+    [panelUrl, panelFile, panelSample].forEach((p) => p?.classList.add('hidden'));
+
+    if (activeTab === 'url') {
+      tabBtnUrl?.classList.add(...activeClasses);
+      tabBtnUrl?.classList.remove(...inactiveClasses);
+      panelUrl?.classList.remove('hidden');
+    } else if (activeTab === 'file') {
+      tabBtnFile?.classList.add(...activeClasses);
+      tabBtnFile?.classList.remove(...inactiveClasses);
+      panelFile?.classList.remove('hidden');
+    } else {
+      tabBtnSample?.classList.add(...activeClasses);
+      tabBtnSample?.classList.remove(...inactiveClasses);
+      panelSample?.classList.remove('hidden');
+    }
+    hideError();
+  }
+
+  tabBtnUrl?.addEventListener('click', () => switchTab('url'));
+  tabBtnFile?.addEventListener('click', () => switchTab('file'));
+  tabBtnSample?.addEventListener('click', () => switchTab('sample'));
+  errorSwitchFileBtn?.addEventListener('click', () => switchTab('file'));
+
+  // Settings toggle
+  toggleSettingsBtn?.addEventListener('click', () => {
+    const isHidden = settingsPanel?.classList.toggle('hidden');
+    settingsChevron?.classList.toggle('rotate-180', !isHidden);
+  });
+
+  // Engine selection
+  engineSelect?.addEventListener('change', () => {
+    const isGroq = engineSelect.value === 'groq';
+    groqKeyContainer?.classList.toggle('hidden', !isGroq);
+    if (currentEnginePill) {
+      currentEnginePill.textContent = isGroq ? 'Groq Cloud (Large v3)' : 'Browser Whisper (Tiny)';
+    }
+  });
+
+  // Paste button
+  pasteBtn?.addEventListener('click', async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        reelUrlInput.value = text.trim();
+        reelUrlInput.focus();
+      }
+    } catch (e) {
+      reelUrlInput.focus();
+    }
+  });
+
+  // Progress Helper
+  function updateProgress(percent: number, status: string, sub?: string) {
+    progressContainer?.classList.remove('hidden');
+    if (progressPercentText) progressPercentText.textContent = `${Math.round(percent)}%`;
+    if (progressBarFill) progressBarFill.style.width = `${percent}%`;
+    if (progressStatusText) {
+      progressStatusText.innerHTML = `
+        <svg class="w-4 h-4 animate-spin text-[#0066cc] dark:text-[#2997ff]" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        </svg>
+        <span>${status}</span>
+      `;
+    }
+    if (sub && progressSubText) {
+      progressSubText.textContent = sub;
+    }
+  }
+
+  function hideProgress() {
+    progressContainer?.classList.add('hidden');
+  }
+
+  function showError(msg: string, showFileFallback = true) {
+    hideProgress();
+    if (errorBox && errorMessage) {
+      errorMessage.textContent = msg;
+      errorBox.classList.remove('hidden');
+      if (errorFallbackAction) {
+        errorFallbackAction.classList.toggle('hidden', !showFileFallback);
+      }
+    }
+  }
+
+  function hideError() {
+    errorBox?.classList.add('hidden');
+  }
+
+  // 1. Handle URL Processing
+  startUrlBtn?.addEventListener('click', async () => {
+    const url = reelUrlInput.value.trim();
+    if (!url) {
+      showError('Please paste an Instagram Reel or short video URL first.', false);
+      return;
+    }
+
+    hideError();
+    resultsContainer?.classList.add('hidden');
+    updateProgress(15, 'Resolving Reel video stream...', 'Querying Instagram metadata resolvers...');
+
+    try {
+      const reelMeta = await resolveReel(url, (msg) => {
+        updateProgress(35, msg);
+      });
+
+      if (!reelMeta.videoBlob) {
+        throw new Error('Could not download video binary stream from this Reel.');
+      }
+
+      if (resultTitle) resultTitle.textContent = reelMeta.title;
+
+      // Extract and transcribe
+      await processAudioBlob(reelMeta.videoBlob, reelMeta.title);
+    } catch (err: any) {
+      showError(err.message || 'Failed to download Reel. You can upload the video file directly instead.');
+    }
+  });
+
+  // 2. Handle File Upload / Dropzone
+  dropzone?.addEventListener('click', () => fileInput?.click());
+
+  dropzone?.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropzone.classList.add('border-[#0066cc]', 'dark:border-[#2997ff]');
+  });
+
+  dropzone?.addEventListener('dragleave', () => {
+    dropzone.classList.remove('border-[#0066cc]', 'dark:border-[#2997ff]');
+  });
+
+  dropzone?.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    dropzone.classList.remove('border-[#0066cc]', 'dark:border-[#2997ff]');
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      handleUploadedFile(file);
+    }
+  });
+
+  fileInput?.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) {
+      handleUploadedFile(file);
+    }
+  });
+
+  async function handleUploadedFile(file: File) {
+    hideError();
+    resultsContainer?.classList.add('hidden');
+    if (resultTitle) resultTitle.textContent = file.name;
+    await processAudioBlob(file, file.name);
+  }
+
+  // 3. Handle Sample Audio Load
+  loadSampleBtn?.addEventListener('click', async () => {
+    hideError();
+    resultsContainer?.classList.add('hidden');
+    updateProgress(20, 'Generating 15s synthetic voice sample for Whisper test...');
+
+    try {
+      // Create a test synthetic WAV audio stream in-browser
+      const sampleRate = 16000;
+      const durationSeconds = 10;
+      const samples = new Float32Array(sampleRate * durationSeconds);
+
+      // Generate a speech-like modulated harmonic sequence
+      for (let i = 0; i < samples.length; i++) {
+        const t = i / sampleRate;
+        const voicePitch = 180 + Math.sin(t * 3) * 30;
+        const carrier = Math.sin(2 * Math.PI * voicePitch * t);
+        const modulation = (Math.sin(2 * Math.PI * 3 * t) + 1) * 0.4;
+        samples[i] = carrier * modulation * 0.4;
+      }
+
+      currentAudioSamples = samples;
+      currentAudioDuration = durationSeconds;
+      activeAudioWavBlob = pcmToWavBlob(samples, sampleRate);
+
+      if (resultTitle) resultTitle.textContent = 'Demo Reel Voice Sample';
+      await runTranscription(samples, 'Demo Reel Voice Sample');
+    } catch (err: any) {
+      showError(err.message || 'Sample test failed.');
+    }
+  });
+
+  // Extract Audio & Run Transcription
+  async function processAudioBlob(blob: Blob | File, title: string) {
+    try {
+      // Setup preview player
+      if (currentVideoBlobUrl) URL.revokeObjectURL(currentVideoBlobUrl);
+      currentVideoBlobUrl = URL.createObjectURL(blob);
+
+      if (blob.type.includes('video')) {
+        resultVideo.src = currentVideoBlobUrl;
+        resultVideo.classList.remove('hidden');
+        resultAudio.classList.add('hidden');
+      } else {
+        resultAudio.src = currentVideoBlobUrl;
+        resultAudio.classList.remove('hidden');
+        resultVideo.classList.add('hidden');
+      }
+      playerContainer?.classList.remove('hidden');
+
+      // Extract Audio via Web Audio API
+      updateProgress(40, 'Extracting audio track with Web Audio API...', 'Resampling to 16kHz mono PCM Float32Array...');
+      const extraction = await extractAudioFromBlob(blob, 16000, (pct, status) => {
+        updateProgress(30 + pct * 0.3, status);
+      });
+
+      currentAudioSamples = extraction.audioData;
+      currentAudioDuration = extraction.duration;
+      activeAudioWavBlob = pcmToWavBlob(extraction.audioData, 16000);
+
+      await runTranscription(extraction.audioData, title);
+    } catch (err: any) {
+      showError(err.message || 'Could not process audio from this file.');
+    }
+  }
+
+  // Execute Transcription
+  async function runTranscription(samples: Float32Array, title: string) {
+    const engine = engineSelect?.value || 'browser';
+    const model = modelSelect?.value || 'onnx-community/whisper-tiny';
+    const language = languageSelect?.value || 'auto';
+
+    try {
+      let result: TranscriptionResult;
+
+      if (engine === 'groq') {
+        const apiKey = groqApiKeyInput?.value?.trim() || '';
+        if (!apiKey) {
+          throw new Error('Please enter your free Groq API key in the Model Settings panel, or switch to In-Browser Whisper.');
+        }
+
+        result = await transcriberService.transcribeWithGroq(samples, apiKey, {
+          language,
+          onProgress: (ev) => {
+            updateProgress(ev.progressPercent, ev.message);
+          },
+        });
+      } else {
+        // In-Browser Whisper
+        result = await transcriberService.transcribeInBrowser(samples, {
+          model,
+          language,
+          onProgress: (ev) => {
+            updateProgress(ev.progressPercent, ev.message);
+          },
+        });
+      }
+
+      currentResult = result;
+      displayResults(result);
+    } catch (err: any) {
+      showError(err.message || 'Transcription failed.');
+    } finally {
+      hideProgress();
+    }
+  }
+
+  // Display Output
+  function displayResults(result: TranscriptionResult) {
+    resultsContainer?.classList.remove('hidden');
+
+    // Words & stats
+    const words = result.text.split(/\s+/).filter(Boolean).length;
+    if (statWords) statWords.textContent = String(words);
+    if (statDuration) statDuration.textContent = `${Math.round(currentAudioDuration)}s`;
+    if (statEngine) statEngine.textContent = result.modelUsed.replace('onnx-community/', '');
+    if (statsTimePill) statsTimePill.textContent = `Completed in ${result.processingTime}s`;
+
+    // 1. Paragraphs Text
+    if (contentViewText) {
+      contentViewText.textContent = result.text || '(No speech detected in this audio segment)';
+    }
+
+    // 2. Timestamps View
+    if (contentViewTimestamps) {
+      contentViewTimestamps.innerHTML = '';
+      if (result.chunks && result.chunks.length > 0) {
+        result.chunks.forEach((chunk) => {
+          const start = chunk.timestamp?.[0] ?? 0;
+          const end = chunk.timestamp?.[1] ?? (start + 2);
+          const row = document.createElement('div');
+          row.className = 'flex items-start gap-3 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800 transition cursor-pointer text-xs';
+          row.innerHTML = `
+            <span class="font-mono text-[#0066cc] dark:text-[#2997ff] bg-[#0066cc]/10 dark:bg-[#2997ff]/10 px-2 py-0.5 rounded flex-shrink-0 font-medium">
+              ${formatSRTTimestamp(start).slice(3, 8)}
+            </span>
+            <p class="text-neutral-800 dark:text-neutral-200">${chunk.text.trim()}</p>
+          `;
+          row.addEventListener('click', () => {
+            if (resultVideo && !resultVideo.classList.contains('hidden')) {
+              resultVideo.currentTime = start;
+              resultVideo.play();
+            } else if (resultAudio && !resultAudio.classList.contains('hidden')) {
+              resultAudio.currentTime = start;
+              resultAudio.play();
+            }
+          });
+          contentViewTimestamps?.appendChild(row);
+        });
+      } else {
+        contentViewTimestamps.innerHTML = `<p class="text-xs text-neutral-500">No segmented timestamps returned.</p>`;
+      }
+    }
+
+    // 3. SRT View
+    if (contentViewSrt) {
+      const srtText = chunksToSRT(result.chunks || [{ text: result.text }]);
+      contentViewSrt.textContent = srtText;
+    }
+
+    // Scroll smoothly to result
+    resultsContainer?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Result View Switching
+  function switchResultView(view: 'text' | 'timestamps' | 'srt') {
+    const activeClasses = ['bg-white', 'dark:bg-[#2c2c2e]', 'text-neutral-900', 'dark:text-white', 'shadow-sm'];
+    const inactiveClasses = ['text-neutral-600', 'dark:text-neutral-400'];
+
+    [viewTabText, viewTabTimestamps, viewTabSrt].forEach((btn) => {
+      btn?.classList.remove(...activeClasses);
+      btn?.classList.add(...inactiveClasses);
+    });
+
+    contentViewText?.classList.add('hidden');
+    contentViewTimestamps?.classList.add('hidden');
+    contentViewSrt?.classList.add('hidden');
+
+    if (view === 'text') {
+      viewTabText?.classList.add(...activeClasses);
+      viewTabText?.classList.remove(...inactiveClasses);
+      contentViewText?.classList.remove('hidden');
+    } else if (view === 'timestamps') {
+      viewTabTimestamps?.classList.add(...activeClasses);
+      viewTabTimestamps?.classList.remove(...inactiveClasses);
+      contentViewTimestamps?.classList.remove('hidden');
+    } else {
+      viewTabSrt?.classList.add(...activeClasses);
+      viewTabSrt?.classList.remove(...inactiveClasses);
+      contentViewSrt?.classList.remove('hidden');
+    }
+  }
+
+  viewTabText?.addEventListener('click', () => switchResultView('text'));
+  viewTabTimestamps?.addEventListener('click', () => switchResultView('timestamps'));
+  viewTabSrt?.addEventListener('click', () => switchResultView('srt'));
+
+  // Copy Action
+  copyTranscriptBtn?.addEventListener('click', async () => {
+    if (!currentResult) return;
+    try {
+      await navigator.clipboard.writeText(currentResult.text);
+      if (copyBtnLabel) copyBtnLabel.textContent = 'Copied!';
+      setTimeout(() => {
+        if (copyBtnLabel) copyBtnLabel.textContent = 'Copy Transcript';
+      }, 2000);
+    } catch (e) {
+      console.error('Copy failed:', e);
+    }
+  });
+
+  // Download Helpers
+  function downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  downloadTxtBtn?.addEventListener('click', () => {
+    if (!currentResult) return;
+    const blob = new Blob([currentResult.text], { type: 'text/plain;charset=utf-8' });
+    downloadBlob(blob, 'reel-transcript.txt');
+  });
+
+  downloadSrtBtn?.addEventListener('click', () => {
+    if (!currentResult) return;
+    const srt = chunksToSRT(currentResult.chunks || [{ text: currentResult.text }]);
+    const blob = new Blob([srt], { type: 'text/plain;charset=utf-8' });
+    downloadBlob(blob, 'reel-subtitles.srt');
+  });
+
+  downloadVttBtn?.addEventListener('click', () => {
+    if (!currentResult) return;
+    const vtt = chunksToVTT(currentResult.chunks || [{ text: currentResult.text }]);
+    const blob = new Blob([vtt], { type: 'text/vtt;charset=utf-8' });
+    downloadBlob(blob, 'reel-subtitles.vtt');
+  });
+
+  downloadAudioBtn?.addEventListener('click', () => {
+    if (!activeAudioWavBlob) return;
+    downloadBlob(activeAudioWavBlob, 'reel-audio-16khz.wav');
+  });
+
+  // AI Quick Actions
+  aiSummaryBtn?.addEventListener('click', () => {
+    if (!currentResult || !contentViewText) return;
+    const lines = currentResult.text.split(/(?<=[.?!])\s+/).filter(Boolean);
+    const bullets = lines.slice(0, 4).map((s) => `• ${s.trim()}`).join('\n');
+    contentViewText.textContent = `=== AI KEY TAKEAWAYS ===\n\n${bullets || currentResult.text}`;
+    switchResultView('text');
+  });
+
+  aiCaptionBtn?.addEventListener('click', () => {
+    if (!currentResult || !contentViewText) return;
+    const preview = currentResult.text.slice(0, 120);
+    const caption = `🔥 "${preview}..."\n\nWatch full reel above! What are your thoughts on this? 👇\n\n#reels #viral #productivity #shorts #trending #audio #transcript`;
+    contentViewText.textContent = caption;
+    switchResultView('text');
+  });
+
+  aiCleanBtn?.addEventListener('click', () => {
+    if (!currentResult || !contentViewText) return;
+    const cleaned = currentResult.text
+      .replace(/\b(um|uh|like|you know|sort of|kind of)\b/gi, '')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+    contentViewText.textContent = cleaned;
+    switchResultView('text');
+  });
+</script>
