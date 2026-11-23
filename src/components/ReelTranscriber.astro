@@ -265,22 +265,57 @@ const {
         </p>
       </div>
 
-      <!-- Error Alert Box -->
-      <div id="error-box" class="hidden p-4 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-xs leading-relaxed">
-        <div class="flex items-start gap-2.5">
-          <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
-          <div class="flex-1">
-            <p id="error-message" class="font-medium"></p>
-            <div id="error-fallback-action" class="mt-2 hidden">
-              <button
-                id="error-switch-file-btn"
-                type="button"
-                class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-200 font-semibold hover:bg-red-200 transition"
-              >
-                Switch to File Upload Tab
-              </button>
+      <!-- Error & Resolution Helper Card -->
+      <div id="error-box" class="hidden p-5 sm:p-6 rounded-2xl bg-amber-50/90 dark:bg-[#252219] border border-amber-200 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 text-xs leading-relaxed transition-all">
+        <div class="flex items-start gap-3">
+          <div class="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+          <div class="flex-1 space-y-3">
+            <div>
+              <h4 class="font-semibold text-sm text-neutral-900 dark:text-white">Instagram Access Restriction</h4>
+              <p id="error-message" class="text-neutral-700 dark:text-neutral-300 mt-1">
+                Instagram frequently blocks automated third-party scrapers from downloading public reels directly.
+              </p>
+            </div>
+
+            <div id="error-fallback-action" class="space-y-3 pt-1">
+              <p class="font-medium text-neutral-800 dark:text-neutral-200">How to transcribe this Reel right now:</p>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <!-- Action 1: Switch to Upload Tab -->
+                <button
+                  id="error-switch-file-btn"
+                  type="button"
+                  class="px-4 py-2.5 rounded-xl bg-[#0066cc] dark:bg-[#2997ff] text-white font-semibold hover:bg-[#0071e3] transition shadow-sm flex items-center justify-center gap-2 cursor-pointer text-left"
+                >
+                  <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                  </svg>
+                  <span>Upload Video / MP4 File</span>
+                </button>
+
+                <!-- Action 2: Open Free Saver -->
+                <a
+                  id="error-external-saver-btn"
+                  href="https://snapinsta.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="px-4 py-2.5 rounded-xl bg-white dark:bg-[#1d1d1f] border border-neutral-300 dark:border-neutral-700 text-neutral-800 dark:text-neutral-200 font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-800 transition flex items-center justify-center gap-2 text-left"
+                >
+                  <svg class="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                  <span>Open 1-Click Reel Saver ↗</span>
+                </a>
+              </div>
+
+              <!-- Tip banner -->
+              <div class="p-3 rounded-xl bg-white/60 dark:bg-black/30 border border-amber-200/50 dark:border-amber-800/40 text-[11px] text-neutral-600 dark:text-neutral-400">
+                <strong>💡 Quickest method:</strong> In the Instagram mobile app, open the Reel, tap <strong>Share ➔ Download</strong> (saves video straight to Photos). Then drop it into the Upload tab!
+              </div>
             </div>
           </div>
         </div>
@@ -648,7 +683,11 @@ const {
       // Extract and transcribe
       await processAudioBlob(reelMeta.videoBlob, reelMeta.title);
     } catch (err: any) {
-      showError(err.message || 'Failed to download Reel. You can upload the video file directly instead.');
+      const helperBtn = document.getElementById('error-external-saver-btn') as HTMLAnchorElement;
+      if (helperBtn && url) {
+        helperBtn.href = `https://snapinsta.app/?url=${encodeURIComponent(url)}`;
+      }
+      showError(err.message || 'Instagram has restricted automated scraping for this Reel. Please use the direct Upload tab or download helper.');
     }
   });
 

@@ -11,10 +11,13 @@
     "deploy": "astro build"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.4.9",
     "@astrojs/sitemap": "^3.7.6",
     "@huggingface/transformers": "^4.3.2",
     "@tailwindcss/vite": "^4.3.5",
     "astro": "^7.4.13",
+    "instagram-url-direct": "^2.0.7",
+    "snapsave-media-downloader": "^2.5.1",
     "tailwindcss": "^4.3.5"
   }
 }
