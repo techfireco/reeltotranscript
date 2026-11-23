@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOP — Micro Tool Website Factory</title>
+<style>
+  :root{
+    --text:#2C2C2B; --text-2:#7D7A75; --canvas:#FFFFFF; --surface:#F9F8F7; --surface-2:#F0EFED;
+    --border:#E6E5E3; --blue:#2783DE; --blue-soft:#E5F2FC; --green:#46A171; --green-soft:#E8F1EC;
+    --orange:#D5803B; --orange-soft:#FBEBDE; --red:#E56458; --red-soft:#FCE9E7; --badge-text:#FFFFFF;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --text:#FFFFFF; --text-2:rgba(255,255,255,.65); --canvas:#191919; --surface:#202020; --surface-2:#383836;
+      --border:rgba(255,255,255,.2); --blue:#5E9FE8; --blue-soft:rgba(94,159,232,.12);
+      --green:#72BC8F; --green-soft:rgba(114,188,143,.12); --orange:#DE9255; --orange-soft:rgba(222,146,85,.12);
+      --red:#E97366; --red-soft:rgba(233,115,102,.12); --badge-text:#191919;
+    }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--canvas);color:var(--text);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  main{max-width:880px;margin:0 auto;padding:56px 32px 72px}
+  @media (max-width:640px){main{padding:32px 20px 56px}}
+
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin:0}
+  h1{font-size:40px;line-height:1.12;letter-spacing:-.02em;margin:10px 0 12px;font-weight:700}
+  @media (max-width:640px){h1{font-size:31px}}
+  .lede{font-size:18px;color:var(--text-2);max-width:660px;margin:0 0 20px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{font-size:13px;padding:4px 12px;border:1px solid var(--border);border-radius:999px;color:var(--text-2);background:var(--surface)}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:36px 0 0}
+  @media (max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1px solid var(--border);border-radius:12px;padding:16px;background:var(--surface)}
+  .stat b{display:block;font-size:21px;letter-spacing:-.01em;margin-bottom:2px}
+  .stat span{font-size:13px;color:var(--text-2)}
+
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+  .flow-item{font-size:14px;font-weight:500;padding:6px 12px;border-radius:8px;background:var(--blue-soft);color:var(--blue)}
+  .flow-arrow{color:var(--text-2);font-size:13px}
+
+  section.block{margin-top:56px}
+  .phase-label{font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin:0}
+  h2{font-size:26px;letter-spacing:-.01em;margin:6px 0 6px;font-weight:700}
+  .phase-desc{color:var(--text-2);margin:0 0 4px;max-width:640px}
+
+  .toc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+  @media (max-width:720px){.toc{grid-template-columns:1fr 1fr}}
+  @media (max-width:460px){.toc{grid-template-columns:1fr}}
+  .toc a{display:flex;gap:10px;align-items:baseline;padding:12px 14px;border:1px solid var(--border);border-radius:10px;text-decoration:none;color:var(--text);background:var(--canvas);font-size:14.5px;font-weight:500}
+  .toc a:hover{background:var(--surface)}
+  .toc a span{color:var(--blue);font-weight:700;font-size:13px}
+
+  .step{border:1px solid var(--border);border-radius:12px;padding:20px 24px 22px;margin-top:16px;background:var(--canvas)}
+  @media (max-width:640px){.step{padding:16px 16px 18px}}
+  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .step-num{width:28px;height:28px;border-radius:50%;background:var(--text);color:var(--badge-text);display:inline-flex;align-items:center;justify-content:center;font-size:13.5px;font-weight:700;flex:none}
+  h3{font-size:18px;margin:0;letter-spacing:-.01em}
+  .step p{margin:8px 0 0;font-size:15.5px}
+  .muted{color:var(--text-2)}
+
+  ul.checklist{list-style:none;padding:0;margin:12px 0 0}
+  ul.checklist li{position:relative;padding-left:30px;margin-top:9px;font-size:15.5px}
+  ul.checklist li::before{content:"";position:absolute;left:0;top:4px;width:15px;height:15px;border:1.5px solid var(--text-2);border-radius:4px}
+  ul.plain{padding-left:20px;margin:10px 0 0}
+  ul.plain li{margin-top:6px;font-size:15.5px}
+
+  .callout{margin-top:14px;padding:12px 16px;border-radius:8px;font-size:14.5px}
+  .callout .label{display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:3px}
+  .tip{background:var(--blue-soft)} .tip .label{color:var(--blue)}
+  .warn{background:var(--orange-soft)} .warn .label{color:var(--orange)}
+  .danger{background:var(--red-soft)} .danger .label{color:var(--red)}
+  .win{background:var(--green-soft)} .win .label{color:var(--green)}
+
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;background:var(--surface-2);padding:2px 6px;border-radius:5px;word-break:break-word}
+
+  .table-wrap{overflow-x:auto;margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-2);font-weight:600}
+  td b{font-weight:600}
+
+  .dodont{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  @media (max-width:640px){.dodont{grid-template-columns:1fr}}
+  .dd-card{border:1px solid var(--border);border-radius:12px;padding:18px 20px;background:var(--surface)}
+  .dd-card h4{margin:0 0 4px;font-size:15px}
+  .dd-do h4{color:var(--green)} .dd-dont h4{color:var(--red)}
+  .dd-card ul{list-style:none;padding:0;margin:8px 0 0}
+  .dd-card li{position:relative;padding-left:24px;margin-top:8px;font-size:14.5px}
+  .dd-do li::before{content:"✓";position:absolute;left:0;color:var(--green);font-weight:700}
+  .dd-dont li::before{content:"✕";position:absolute;left:0;color:var(--red);font-weight:700}
+
+  .final-check{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;margin-top:8px}
+  @media (max-width:640px){.final-check{grid-template-columns:1fr}}
+
+  footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--border);font-size:13px;color:var(--text-2)}
+</style>
+</head>
+<body>
+<main>
+
+  <header>
+    <p class="eyebrow">Standard Operating Procedure</p>
+    <h1>Micro Tool Website Factory</h1>
+    <p class="lede">Build small, problem-solving tool websites with AI, rank them on Google, and monetize with AdSense — at roughly ₹1,000 per site. Repeat monthly.</p>
+    <div class="chips">
+      <span class="chip">Source: video transcription</span>
+      <span class="chip">Cadence: 1 site / month</span>
+      <span class="chip">Stack: Astro + Cloudflare</span>
+      <span class="chip">Skill level: no coding needed</span>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><b>₹300–1,000</b><span>Only cost per site (the .com domain)</span></div>
+    <div class="stat"><b>12 sites / yr</b><span>Portfolio even if none rank</span></div>
+    <div class="stat"><b>1–6 months</b><span>Typical time for SEO to kick in</span></div>
+    <div class="stat"><b>$100</b><span>AdSense minimum payout threshold</span></div>
+  </div>
+
+  <section class="block">
+    <h2>The model at a glance</h2>
+    <p class="phase-desc">Solve one tiny problem per website. Low competition → easier ranking → organic traffic → ad revenue.</p>
+    <div class="flow">
+      <span class="flow-item">Find micro problem</span><span class="flow-arrow">→</span>
+      <span class="flow-item">Validate keyword</span><span class="flow-arrow">→</span>
+      <span class="flow-item">Build with AI</span><span class="flow-arrow">→</span>
+      <span class="flow-item">On-page SEO</span><span class="flow-arrow">→</span>
+      <span class="flow-item">Deploy free</span><span class="flow-arrow">→</span>
+      <span class="flow-item">Connect .com</span><span class="flow-arrow">→</span>
+      <span class="flow-item">Index &amp; measure</span><span class="flow-arrow">→</span>
+      <span class="flow-item">AdSense</span>
+    </div>
+    <div class="callout win"><span class="label">Win-win</span>Worst case, all 12 sites fail — you still have 12 live, deployed projects to show in job interviews. Best case, 1–2 rank and generate passive income you can reinvest.</div>
+  </section>
+
+  <section class="block">
+    <h2>Phases</h2>
+    <nav class="toc">
+      <a href="#phase1"><span>01</span> Research &amp; validation</a>
+      <a href="#phase2"><span>02</span> Build with AI</a>
+      <a href="#phase3"><span>03</span> SEO &amp; launch prep</a>
+      <a href="#phase4"><span>04</span> Deploy, domain &amp; email</a>
+      <a href="#phase5"><span>05</span> Index, measure, backlinks</a>
+      <a href="#phase6"><span>06</span> Monetize &amp; repeat</a>
+    </nav>
+  </section>
+
+  <!-- PHASE 1 -->
+  <section class="block" id="phase1">
+    <p class="phase-label">Phase 1</p>
+    <h2>Research &amp; validation</h2>
+    <p class="phase-desc">Spend real time here. A validated idea decides everything downstream.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">1</span><h3>Find a micro problem</h3></div>
+      <ul class="checklist">
+        <li>Watch your own daily life: anything you Google is a potential tool idea. Save every one in your phone's Notes app and research later.</li>
+        <li>Mine Reddit: search Google for <code>"is there a tool for" site:reddit.com</code> (also try <code>site:quora.com</code>). Each post is someone describing an unsolved problem.</li>
+        <li>Paste long posts into an AI model (Claude, Gemini) and ask it to extract tool ideas.</li>
+        <li>Pick <b>small</b> problems only — big problems mean funded competitors; micro problems mean low competition and a site you can ship in a day to a week.</li>
+      </ul>
+      <div class="callout danger"><span class="label">Never do this</span>Don't share your ideas publicly or with friends in your field. Every share creates competitors for your exact keyword.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">2</span><h3>Validate the idea before building</h3></div>
+      <ul class="checklist">
+        <li>Find the <b>real</b> main keyword: search your phrasing, then note what ranking sites actually call it (e.g. you search “online scale”, the market says “online ruler”).</li>
+        <li>Check volume in the free <b>Ahrefs Keyword Research Tool</b>. Volume is per-country (US by default) — other countries and languages add more.</li>
+        <li>Audit every competitor on pages 1–3: note every flaw (no dark mode, broken UI, bad mobile layout, missing filters/features, paid-only). Your site must fix all of them.</li>
+        <li>Scan competitor domains: if top rankers <b>don't</b> have the exact keyword in a .com domain, that's a green light for you to take it.</li>
+        <li>Check competitor traffic + growth trend with the free <b>Ahrefs Traffic Checker</b>.</li>
+        <li>Note extra sub-tool ideas from keyword variations (by image, from URL, from PDF…) and plan a multi-language (i18n) version to rank in other countries with less competition.</li>
+      </ul>
+      <div class="table-wrap"><table>
+        <tr><th>Monthly volume</th><th>Difficulty</th><th>Recommendation</th></tr>
+        <tr><td><b>~100</b></td><td>Very easy to rank</td><td>Best starting point</td></tr>
+        <tr><td><b>~1,000</b></td><td>Medium</td><td>The sweet spot</td></tr>
+        <tr><td><b>~10,000</b></td><td>Tough</td><td>Only after a few wins</td></tr>
+      </table></div>
+      <div class="callout tip"><span class="label">Golden keyword signal</span>If page 1–2 shows irrelevant results — Reddit/Quora posts, Play Store links, PDFs, random blogs — Google has nothing to show. Build there and you can rank very fast.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">3</span><h3>Choose the domain name (don't buy yet)</h3></div>
+      <ul class="checklist">
+        <li>Check availability on <b>Instant Domain Search</b>. Two hard rules: the main keyword must be in the domain, and it must be a <b>.com</b>.</li>
+        <li>Exact .com taken? Use Google autocomplete: add a space <b>before</b> or after your keyword to discover natural modifiers (real…, free…, …ai, a…), then pick an available variant.</li>
+        <li>Sanity-check the modifier keyword's volume too, then lock your name (e.g. <code>fontfinderai.com</code>).</li>
+      </ul>
+      <div class="callout warn"><span class="label">Sequence matters</span>Build the website first, buy the domain <b>last</b>. Domains bought in excitement often never get built. Money wasted.</div>
+      <div class="callout danger"><span class="label">Ranking killer</span>Cheap TLDs (.xyz etc.) and free subdomains (pages.dev, workers.dev, vercel.app, netlify.app) don't rank. The ₹1,000/yr .com is the one unavoidable cost.</div>
+    </div>
+  </section>
+
+  <!-- PHASE 2 -->
+  <section class="block" id="phase2">
+    <p class="phase-label">Phase 2</p>
+    <h2>Build with AI</h2>
+    <p class="phase-desc">Prime the agent properly and it ships a premium site instead of AI slop.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">4</span><h3>Prepare the machine &amp; pick the stack</h3></div>
+      <ul class="checklist">
+        <li>Install <b>Git</b>, <b>Node.js</b>, and an editor — VS Code, Antigravity, or Zed.</li>
+        <li>Pick an AI coding agent: Claude Code (subscription) or free options like Antigravity / Opencode. They all work — the process is identical.</li>
+        <li>Stack = <b>Astro JS</b>: server-first, zero JS by default, multi-page, SEO-optimized, and Cloudflare-optimized. Use Next.js only for client-heavy dashboard-style apps.</li>
+        <li>Hosting = <b>Cloudflare Pages</b> for static sites (unlimited free traffic) or <b>Cloudflare Workers</b> for dynamic sites (~100k free requests/day; $5/mo if you ever outgrow it).</li>
+      </ul>
+      <div class="callout warn"><span class="label">Why not Vercel / Netlify</span>Their 100 GB free bandwidth ≈ 50k page views. Cross it and the site goes down — and Google derankings from downtime are hard to recover.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">5</span><h3>Prime the AI agent</h3></div>
+      <ul class="checklist">
+        <li>Create a folder named after the domain, <code>cd</code> into it, run the official Astro install command; init in the current directory (<code>.</code>) and say <b>Yes</b> to Git init.</li>
+        <li>Add the Astro extension to your editor.</li>
+        <li>Install the <b>Tailwind 4 docs skill</b> (project scope, symlink is fine) — prevents v3/v4 confusion and wasted tokens.</li>
+        <li>Pull a <b>design.md</b> via getdesign.md (Vercel default; Apple, Figma, BMW etc. also available) — this is what kills gradient-heavy AI slop.</li>
+        <li>Add the <b>Astro Docs MCP server</b> to your agent so it always uses current Astro APIs.</li>
+      </ul>
+      <div class="callout tip"><span class="label">Why this works</span>Skills + MCP + design.md give the agent a fixed environment: fewer hallucinations, fewer retries, fewer tokens, and a consistent professional look on every site.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">6</span><h3>Build the website</h3></div>
+      <ul class="checklist">
+        <li>Switch the agent to <b>plan mode</b>, then run the website-building prompt with: site name + domain, description, competitor URL, and a request for improvement suggestions.</li>
+        <li>Answer the agent's questions deliberately: keep the tool <b>free, unlimited, no accounts</b>; prefer free APIs/free tiers; accept sensible rate-limit guards; keep the site as static as possible.</li>
+        <li>Ask for a separate page per sub-tool (by image / from URL / from PDF…) — each page ranks for its own keyword.</li>
+        <li>Approve the plan, let it build and self-test (mobile, light/dark mode).</li>
+        <li>Run <code>npm run dev</code> → open <code>localhost:4321</code> → manually test the core tool, dark mode, and every page.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">7</span><h3>Git discipline (the token saver)</h3></div>
+      <ul class="checklist">
+        <li><b>Commit before every prompt</b>: Source Control → stage changes (+) → short message → Commit.</li>
+        <li>Bad AI output? Don't ask the AI to undo (wastes tokens) — just <b>Discard Changes</b> to roll back to the last commit.</li>
+        <li>Start every new task in a fresh session (<code>/new</code>) — long sessions burn through usage limits.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PHASE 3 -->
+  <section class="block" id="phase3">
+    <p class="phase-label">Phase 3</p>
+    <h2>SEO &amp; launch prep</h2>
+    <p class="phase-desc">Everything here happens before the site ever goes live.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">8</span><h3>Run the on-page SEO prompt</h3></div>
+      <ul class="checklist">
+        <li>Collect supporting keywords from the Ahrefs keyword generator. <b>Skip competitor brand keywords</b> (WhatTheFont, Canva, Adobe…).</li>
+        <li><code>/new</code> → run the SEO prompt with main + supporting keywords. It handles titles, meta descriptions, OG tags, JSON-LD structured data, and content depth.</li>
+        <li>Speed is already handled: Cloudflare's edge CDN serves from the nearest country.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">9</span><h3>Add FAQ schema</h3></div>
+      <ul class="checklist">
+        <li>Gather real questions: Ahrefs keyword generator → <b>Questions</b> tab, plus Google's <b>People Also Ask</b> (keep expanding to load more; search “what + keyword” if PAA doesn't appear).</li>
+        <li><code>/new</code> → run the FAQ prompt (one question per line) so FAQs ship as JSON-LD markup — these already rank on Google, so they pull rankings fast.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">10</span><h3>Favicon &amp; logo</h3></div>
+      <ul class="checklist">
+        <li>Pick an icon from an icon library; tune preset, border, rounding (~60), padding 0, shadow none → download PNG.</li>
+        <li>Run it through <b>Real Favicon Generator</b> (site name + short name) → download zip → unzip → copy all files into <code>public/</code>.</li>
+        <li><code>/new</code> → paste the generated snippet: “favicon images are in the public directory, add favicon support.”</li>
+        <li>Copy the icon's <b>SVG element</b> (Inspect → Copy element) → tell the agent: use this SVG as the site logo; favicon is done, don't touch it.</li>
+      </ul>
+      <div class="callout tip"><span class="label">SVG, not PNG</span>An SVG logo auto-inverts to white in dark mode. A PNG stays black and breaks the theme.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">11</span><h3>Trust pages &amp; error pages</h3></div>
+      <ul class="checklist">
+        <li><code>/new</code> → run the required-pages prompt: <b>Privacy Policy, Terms &amp; Conditions, Contact, About</b>. Without these, AdSense will never approve the site.</li>
+        <li><code>/new</code> → add error pages: <b>404</b> (not found) and <b>500</b> (server error).</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">12</span><h3>robots.txt, sitemap &amp; mobile check</h3></div>
+      <ul class="checklist">
+        <li>Verify <code>localhost:4321/robots.txt</code> exists (the agent usually creates it, with the sitemap URL inside).</li>
+        <li>Sitemaps only generate at build time: <code>npm run build</code> → <code>npm run preview</code> → verify <code>/sitemap-index.xml</code> and <code>/sitemap-0.xml</code>. If missing: “create sitemap.xml, use the Astro Docs MCP.”</li>
+        <li>Mobile check: DevTools → Toggle device → pick a phone → refresh → test everything. If broken: “make the website mobile responsive.”</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- PHASE 4 -->
+  <section class="block" id="phase4">
+    <p class="phase-label">Phase 4</p>
+    <h2>Deploy, domain &amp; email</h2>
+    <p class="phase-desc">Ship it to the world — hosting free, domain paid, email free.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">13</span><h3>Back up code on GitHub (recommended)</h3></div>
+      <ul class="checklist">
+        <li>Install the GitHub CLI: <code>brew install gh</code> (Mac) / <code>winget install GitHub.cli</code> (Windows) / <code>sudo apt install gh</code> (Linux) → <code>gh auth login</code> → GitHub.com → HTTPS → browser login.</li>
+        <li>Create a <b>private</b> repo → confirm branch is <code>main</code> → run the <code>git remote add…</code> and <code>git push</code> commands shown by GitHub.</li>
+        <li>Ongoing: stage → commit → <b>Sync Changes</b> after every finished task.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">14</span><h3>Deploy to Cloudflare</h3></div>
+      <ul class="checklist">
+        <li>Create/log in to a Cloudflare account, then connect the terminal: <code>npx wrangler login</code> → authorize in browser → <code>Y</code>.</li>
+        <li>Ask the agent: “Is this website static or dynamic — Cloudflare Pages or Workers?” Then run the matching deployment prompt (it also adds a <code>deploy</code> script to package.json).</li>
+        <li>Test the temporary <code>*.workers.dev</code> / <code>*.pages.dev</code> URL end to end.</li>
+      </ul>
+      <div class="callout tip"><span class="label">Every future update</span>Commit → Sync Changes → <code>npm run deploy</code>. That's the whole release process, forever.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">15</span><h3>Buy the domain &amp; connect it</h3></div>
+      <p class="muted">Prices below are as recorded — they change constantly, so always re-compare (and check renewal prices too).</p>
+      <div class="table-wrap"><table>
+        <tr><th>Registrar</th><th>~1st year</th><th>Free privacy</th><th>Payments</th><th>Notes</th></tr>
+        <tr><td><b>Spaceship</b></td><td>₹866 (₹374 w/ promo)</td><td>Yes</td><td>Cards, most debit cards</td><td>Usually cheapest; promo codes (e.g. COOM67) on its deals page; lowest renewal</td></tr>
+        <tr><td><b>Namecheap</b></td><td>₹1,095</td><td>Yes</td><td>Credit card</td><td>Renewal ~₹1,400</td></tr>
+        <tr><td><b>Hostinger</b></td><td>₹1,081</td><td>Yes</td><td>UPI</td><td>Avoid the default 3-year plan trap — set to 1 year</td></tr>
+        <tr><td><b>GoDaddy</b></td><td>₹1,029</td><td>No (paid)</td><td>UPI</td><td>Expensive renewals</td></tr>
+        <tr><td><b>BigRock</b></td><td>₹883</td><td>No (₹500)</td><td>UPI</td><td>Cheap if you skip privacy</td></tr>
+      </table></div>
+      <ul class="checklist">
+        <li>Buy <b>1 year only</b>, remove all add-ons, apply any promo code, then <b>turn off auto-renewal</b> — renew next year only if the site performs.</li>
+        <li>Cloudflare → Add Domain → Free plan → copy the two nameservers → paste into the registrar's Nameservers/DNS section <b>in order</b> → “I updated my nameservers” (usually live in 2–10 minutes).</li>
+        <li>Delete the pre-set <b>A</b> and <b>CNAME</b> records in Cloudflare DNS, then: Workers &amp; Pages → your project → Domains / Custom domains → add the root domain <b>and</b> the <code>www.</code> version.</li>
+        <li>Verify both <code>domain.com</code> and <code>www.domain.com</code> load.</li>
+      </ul>
+      <div class="callout warn"><span class="label">If the Cloudflare dashboard hangs</span>Browser extensions often break it. Retry in a clean browser or a fresh Chrome profile.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">16</span><h3>Kill duplicate content</h3></div>
+      <ul class="checklist">
+        <li><b>Workers:</b> production deployment → Domains → turn <b>off</b> both <code>workers.dev</code> URLs (only after the custom domain is live).</li>
+        <li><b>Pages:</b> create <code>public/_headers</code> with the 301 redirect rule from <code>yourproject.pages.dev/*</code> to <code>https://yourdomain.com</code>.</li>
+      </ul>
+      <p class="muted">Same content on two URLs = duplicate content in Google's eyes = deranking.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">17</span><h3>Free professional email</h3></div>
+      <ul class="checklist">
+        <li>Cloudflare → <b>Email Routing</b> → onboard your domain → Activate (MX, SPF, DKIM, DMARC are configured automatically).</li>
+        <li>Add your Gmail as a <b>destination address</b> and verify it.</li>
+        <li>Add a routing rule: <code>hello@yourdomain.com</code> (or admin@ / contact@) → send to your Gmail.</li>
+        <li>Send a test email and check it arrives (look in spam), then use this address on the Contact page.</li>
+      </ul>
+      <p class="muted">Replaces a ₹290–500/month mailbox with ₹0. A Gmail on the contact page looks unprofessional; this doesn't.</p>
+    </div>
+  </section>
+
+  <!-- PHASE 5 -->
+  <section class="block" id="phase5">
+    <p class="phase-label">Phase 5</p>
+    <h2>Index, measure &amp; backlinks</h2>
+    <p class="phase-desc">Tell Google you exist, then track everything.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">18</span><h3>Google Search Console</h3></div>
+      <ul class="checklist">
+        <li>Add your domain as a property (no https prefix).</li>
+        <li>Verify via DNS: choose “Any DNS provider” → copy the TXT value → Cloudflare DNS → Add record → type TXT, name <code>@</code>, paste content → Save → Verify.</li>
+        <li>URL Inspection → enter <code>https://yourdomain.com</code> → <b>Request Indexing</b>. Repeat for any new or significantly updated page.</li>
+        <li>Sitemaps → submit <code>sitemap-index.xml</code> (and <code>sitemap-0.xml</code> as backup).</li>
+        <li>Check the <b>Performance</b> tab weekly: clicks, impressions, and average position per keyword.</li>
+      </ul>
+      <div class="callout tip"><span class="label">Favicon patience</span>If your favicon doesn't show in results, do nothing. Google picks it up automatically within ~7 days.</div>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">19</span><h3>Bing Webmaster Tools</h3></div>
+      <ul class="checklist">
+        <li>Get started → <b>Import from Google Search Console</b> — one click brings your sites over.</li>
+        <li>Request indexing for the homepage and submit both sitemaps.</li>
+      </ul>
+      <p class="muted">Bing throws random errors — don't stress. Google is the priority; Bing is backup traffic.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">20</span><h3>Google Analytics</h3></div>
+      <ul class="checklist">
+        <li>Create a property → country, category, business objectives → add a <b>Web</b> stream (https is pre-selected; don't retype it).</li>
+        <li>Copy the Google tag (Install manually) → <code>/new</code> → “add this Google Analytics code to the website.”</li>
+        <li>Commit → <code>npm run deploy</code> → verify the tag in View Page Source → Test installation → Confirm.</li>
+        <li>Watch: live users, countries, top pages, and traffic channels (organic vs direct vs video).</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">21</span><h3>Backlinks — the compounding trick</h3></div>
+      <ul class="checklist">
+        <li>Interlink your <b>own</b> tool sites, only where a link genuinely helps the user. One ranking site passes link juice to all the others.</li>
+        <li>Pace it: <b>no backlinks for the first month</b> after launch → then one link → next after ~1.5 months → one or two more by month 2.</li>
+        <li>Let organic backlinks accumulate naturally — a genuinely good tool gets cited in blogs on its own.</li>
+      </ul>
+      <div class="callout danger"><span class="label">Link spam</span>Adding many links at once reads as spam and drops rankings (learned the hard way). Slow and related-only wins.</div>
+    </div>
+  </section>
+
+  <!-- PHASE 6 -->
+  <section class="block" id="phase6">
+    <p class="phase-label">Phase 6</p>
+    <h2>Monetize &amp; repeat</h2>
+    <p class="phase-desc">AdSense rewards patience. Apply too early and you burn a review.</p>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">22</span><h3>Apply to AdSense — timing is everything</h3></div>
+      <ul class="checklist">
+        <li>Wait until the site is <b>1–2 months old</b> AND gets <b>2–10 organic clicks/day</b> (check GSC → Performance; friends' visits don't count).</li>
+        <li>Sign up with your main personal email + 2-step verification — you get <b>one AdSense account per lifetime</b> (PAN-verified).</li>
+        <li>Sites → New site → enter the domain (no https) → verify via an <code>ads.txt</code> file in <code>public/</code> (easiest method) → commit → <code>npm run deploy</code> → Verify → Request Review.</li>
+        <li>Rejected for “low value content”? Add genuinely useful content — real detail, real examples, not padding (AI prompt works) → Confirm → Request Review again. Low traffic often triggers this, so waiting also fixes it.</li>
+      </ul>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">23</span><h3>Turn on Auto Ads</h3></div>
+      <ul class="checklist">
+        <li>On approval: Ads → Ads by site → copy the <b>entire</b> code block.</li>
+        <li><code>/new</code> → “This is my Auto Ads AdSense code, please implement it” (it belongs in the <code>&lt;head&gt;</code>).</li>
+        <li>Commit → <code>npm run deploy</code> → AdSense → Auto Ads → Edit → turn ON Auto Ads + auto-optimize → Apply to site.</li>
+        <li>Skip manual placements — Google's auto-optimization outperforms them.</li>
+      </ul>
+      <p class="muted">Earnings accumulate in AdSense and hit your bank the month you cross $100. Meaningful revenue starts around 100–200 visitors/day.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-head"><span class="step-num">24</span><h3>Repeat ×12</h3></div>
+      <ul class="checklist">
+        <li>Ship at least one site per month (2–4 if time allows). Keep noting new ideas as they appear.</li>
+        <li>Expect failures — the creator's first success was website #8. With this SOP the mistakes are pre-paid; commit to 1–2 years.</li>
+        <li>Reinvest early earnings into more domains to compound output.</li>
+      </ul>
+      <div class="table-wrap"><table>
+        <tr><th>Keyword difficulty</th><th>Expected time to rank</th></tr>
+        <tr><td>Really easy (golden keyword)</td><td>Days to 2 months</td></tr>
+        <tr><td>Easy / low volume</td><td>1–2 months</td></tr>
+        <tr><td>Medium (e.g. “online ruler”)</td><td>~6–7 months</td></tr>
+        <tr><td>Competitive</td><td>Up to 2 years</td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- GOLDEN RULES -->
+  <section class="block">
+    <h2>Golden rules</h2>
+    <div class="dodont">
+      <div class="dd-card dd-do">
+        <h4>Always</h4>
+        <ul>
+          <li>.com only, main keyword in the domain</li>
+          <li>Build first, buy the domain last</li>
+          <li>Commit before every AI prompt; <code>/new</code> per task</li>
+          <li>Keep sites static wherever possible</li>
+          <li>Fix every flaw you found in competitors</li>
+          <li>1 year domain, auto-renew off, re-compare prices</li>
+          <li>Wait for organic traffic before AdSense</li>
+        </ul>
+      </div>
+      <div class="dd-card dd-dont">
+        <h4>Never</h4>
+        <ul>
+          <li>Share your keyword/ideas publicly</li>
+          <li>Use .xyz or free subdomains for ranking</li>
+          <li>Buy multi-year plans or add-ons</li>
+          <li>Add all internal backlinks at once</li>
+          <li>Apply to AdSense in week one</li>
+          <li>Target competitor brand keywords</li>
+          <li>Leave workers.dev / pages.dev duplicates live</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- MASTER CHECKLIST -->
+  <section class="block">
+    <h2>Master pre-launch checklist</h2>
+    <p class="phase-desc">Run this top to bottom for every single site.</p>
+    <div class="final-check">
+      <ul class="checklist">
+        <li>Idea validated (volume, competitors, golden signals)</li>
+        <li>.com domain chosen with keyword</li>
+        <li>Agent primed: Tailwind skill, design.md, Astro MCP</li>
+        <li>Site built &amp; tested (<code>npm run dev</code>)</li>
+        <li>On-page SEO prompt done</li>
+        <li>FAQ JSON-LD added</li>
+        <li>Favicon + SVG logo installed</li>
+        <li>Privacy, Terms, Contact, About pages</li>
+        <li>404 + 500 error pages</li>
+      </ul>
+      <ul class="checklist">
+        <li>robots.txt + sitemap verified after build</li>
+        <li>Mobile responsiveness checked</li>
+        <li>Code pushed to private GitHub repo</li>
+        <li>Deployed to Cloudflare Pages/Workers</li>
+        <li>Domain connected (root + www), duplicates disabled</li>
+        <li>Email routing live (hello@domain)</li>
+        <li>GSC verified, indexing requested, sitemaps submitted</li>
+        <li>Bing imported from GSC</li>
+        <li>Google Analytics tag verified</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    SOP compiled from video transcription · Internal reference — prices, promos, and free tiers change; re-verify before each build.
+  </footer>
+
+</main>
+</body>
+</html>
