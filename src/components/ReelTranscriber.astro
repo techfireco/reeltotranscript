@@ -223,6 +223,29 @@ const {
             </select>
           </div>
 
+          <!-- Coolify Download Engine Input -->
+          <div class="sm:col-span-3 pt-2 border-t border-neutral-200/50 dark:border-neutral-800/50">
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-medium text-neutral-700 dark:text-neutral-300">
+                Self-Hosted Download Engine (Coolify)
+              </label>
+              <span class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Active on Coolify (152.67.25.227)
+              </span>
+            </div>
+            <input
+              id="coolify-engine-input"
+              type="url"
+              value="https://dl.152.67.25.227.sslip.io"
+              placeholder="https://dl.152.67.25.227.sslip.io"
+              class="w-full px-3 py-2 rounded-xl border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-[#252528] text-neutral-900 dark:text-white text-xs font-mono"
+            />
+            <p class="text-[11px] text-neutral-500 mt-1">
+              Resolves Instagram/TikTok media through your private Coolify engine (Cobalt v10 + yt-dlp) and streams the video locally into your browser for local Whisper transcription.
+            </p>
+          </div>
+
           <!-- Optional Groq API Key Input -->
           <div id="groq-key-container" class="hidden sm:col-span-3 pt-2">
             <label class="block font-medium text-neutral-700 dark:text-neutral-300 mb-1">
@@ -555,6 +578,16 @@ const {
     if (savedKey) groqApiKeyInput.value = savedKey;
     groqApiKeyInput.addEventListener('change', () => {
       localStorage.setItem('groq_api_key', groqApiKeyInput.value.trim());
+    });
+  }
+
+  // Load saved Coolify Download Engine URL
+  const coolifyEngineInput = document.getElementById('coolify-engine-input') as HTMLInputElement;
+  if (coolifyEngineInput) {
+    const savedEngine = localStorage.getItem('coolify_download_engine_url');
+    if (savedEngine) coolifyEngineInput.value = savedEngine;
+    coolifyEngineInput.addEventListener('change', () => {
+      localStorage.setItem('coolify_download_engine_url', coolifyEngineInput.value.trim());
     });
   }
 

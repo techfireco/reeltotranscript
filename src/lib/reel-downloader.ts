@@ -1,7 +1,7 @@
 /**
  * Instagram Reel & Short Video Resolver
- * Supports resolving Instagram Reels, TikTok, and direct video links,
- * with fallback CORS proxies and API resolvers.
+ * Powered by your self-hosted Coolify Download Engine (Cobalt + yt-dlp + Stream Proxy)
+ * and in-browser local Whisper transcription.
  */
 
 export interface ReelMetadata {
@@ -23,9 +23,20 @@ export interface ResolutionError {
   downloadHelpers: Array<{ name: string; url: string }>;
 }
 
-/**
- * Extracts the Instagram shortcode from various Instagram URL formats
- */
+// Self-hosted Coolify Download Engine URLs
+export const DEFAULT_COOLIFY_ENGINE = 'https://dl.152.67.25.227.sslip.io';
+export const DEFAULT_COBALT_ENGINE = 'https://cobalt.152.67.25.227.sslip.io';
+
+export function getEngineUrl(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('coolify_download_engine_url');
+    if (saved && saved.trim().startsWith('http')) {
+      return saved.trim().replace(/\/+$/, '');
+    }
+  }
+  return DEFAULT_COOLIFY_ENGINE;
+}
+
 export function extractInstagramShortcode(url: string): string | null {
   try {
     const trimmed = url.trim();
@@ -39,9 +50,6 @@ export function extractInstagramShortcode(url: string): string | null {
   return null;
 }
 
-/**
- * Checks if a URL is a direct media/video stream link
- */
 export function isDirectMediaUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
   const lower = url.toLowerCase();
@@ -57,22 +65,20 @@ export function isDirectMediaUrl(url: string): boolean {
   );
 }
 
-/**
- * Validates if the given string is a valid Instagram Reel / Post / Video URL
- */
 export function isValidInstagramUrl(url: string): boolean {
   if (!url || typeof url !== 'string') return false;
   return Boolean(extractInstagramShortcode(url)) || isDirectMediaUrl(url);
 }
 
 /**
- * Resolves an Instagram Reel to a downloadable video URL or video Blob
+ * Resolves media stream via self-hosted Coolify Engine and downloads video buffer locally
  */
 export async function resolveReel(
   url: string,
   onProgress?: (msg: string) => void
 ): Promise<ReelMetadata> {
   const trimmedUrl = url.trim();
+  const engineBase = getEngineUrl();
 
   // Case 0: Direct Media URL (e.g. pasted CDN link or .mp4)
   if (isDirectMediaUrl(trimmedUrl)) {
@@ -93,15 +99,91 @@ export async function resolveReel(
     throw new Error('Please enter a valid Instagram Reel, TikTok, or YouTube Shorts link.');
   }
 
-  onProgress?.('Connecting to video resolution engine...');
-
-  // Attempt 1: Internal API endpoint /api/resolve-reel (Node/SSR/yt-dlp/snapsave)
+  // Attempt 1: Self-Hosted Coolify Download Engine (POST /api/resolve)
   try {
+    onProgress?.('Connecting to your Coolify download engine (152.67.25.227)...');
+    const engineRes = await fetch(`${engineBase}/api/resolve`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url: trimmedUrl }),
+    });
+
+    if (engineRes.ok) {
+      const data = await engineRes.json();
+      if (data.videoUrl) {
+        onProgress?.('Coolify engine resolved video stream. Downloading locally into browser memory...');
+        // Download via Coolify stream proxy or direct CDN
+        const streamUrl = `${engineBase}/api/stream?url=${encodeURIComponent(data.videoUrl)}`;
+        let videoBlob: Blob;
+        try {
+          videoBlob = await fetchWithProgress(streamUrl, onProgress);
+        } catch {
+          videoBlob = await fetchWithProgress(data.videoUrl, onProgress);
+        }
+
+        return {
+          id: shortcode || 'video',
+          sourceUrl: trimmedUrl,
+          videoUrl: data.videoUrl,
+          title: data.title || `Video (${shortcode || 'clip'})`,
+          author: data.author || '@creator',
+          thumbnailUrl: data.thumbnailUrl,
+          videoBlob,
+        };
+      }
+    }
+  } catch (coolifyErr) {
+    console.warn('Coolify download engine query failed, falling back to Cobalt/local:', coolifyErr);
+  }
+
+  // Attempt 2: Self-Hosted Cobalt Engine on Coolify (POST https://cobalt.152.67.25.227.sslip.io/)
+  try {
+    onProgress?.('Querying self-hosted Cobalt engine on Coolify...');
+    const cobaltRes = await fetch(`${DEFAULT_COBALT_ENGINE}/`, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: trimmedUrl,
+        videoQuality: '720',
+      }),
+    });
+
+    if (cobaltRes.ok) {
+      const cobaltData = await cobaltRes.json();
+      const resolvedUrl =
+        cobaltData.url || (cobaltData.picker && cobaltData.picker[0]?.url);
+
+      if (resolvedUrl) {
+        onProgress?.('Cobalt resolved media. Downloading video locally into browser...');
+        const videoBlob = await fetchWithProgress(resolvedUrl, onProgress);
+        return {
+          id: shortcode || 'video',
+          sourceUrl: trimmedUrl,
+          videoUrl: resolvedUrl,
+          title: cobaltData.filename || `Reel (${shortcode || 'clip'})`,
+          author: 'Creator',
+          videoBlob,
+        };
+      }
+    }
+  } catch (cobaltErr) {
+    console.warn('Direct Cobalt query failed:', cobaltErr);
+  }
+
+  // Attempt 3: Local Server Endpoint /api/resolve-reel
+  try {
+    onProgress?.('Checking local server fallback resolver...');
     const res = await fetch(`/api/resolve-reel?url=${encodeURIComponent(trimmedUrl)}`);
     if (res.ok) {
       const data = await res.json();
       if (data.videoUrl) {
-        onProgress?.('Downloading video stream for browser transcription...');
+        onProgress?.('Downloading video stream for local transcription...');
         const videoBlob = await fetchWithProgress(data.videoUrl, onProgress);
         return {
           id: shortcode || 'video',
@@ -114,13 +196,13 @@ export async function resolveReel(
         };
       }
     }
-  } catch (err) {
-    console.warn('Internal API resolver failed, trying public fallback resolvers:', err);
+  } catch {
+    // Fallback
   }
 
-  // Attempt 2: Public FastDL / SnapSave mirror scraper
+  // Attempt 4: FastDL / VKR open resolver
   try {
-    onProgress?.('Trying public Instagram CDN resolvers...');
+    onProgress?.('Querying public Instagram CDN resolver...');
     const fastdlProxy = `https://api.vkrdown.com/web/app/instagram.php?url=${encodeURIComponent(trimmedUrl)}`;
     const fastRes = await fetch(fastdlProxy);
     if (fastRes.ok) {
@@ -139,89 +221,8 @@ export async function resolveReel(
         };
       }
     }
-  } catch (err) {
-    console.warn('FastDL mirror attempt failed:', err);
-  }
-
-  // Attempt 3: Public Cobalt instance pool
-  const cobaltInstances = [
-    'https://api.cobalt.tools/api/json',
-    'https://cobalt.api.kektube.com/api/json',
-    'https://co.wuk.sh/api/json',
-  ];
-
-  for (const instance of cobaltInstances) {
-    try {
-      onProgress?.('Querying open media resolver...');
-      const cobaltRes = await fetch(instance, {
-        method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          url: trimmedUrl,
-          videoQuality: '720',
-        }),
-      });
-
-      if (cobaltRes.ok) {
-        const cobaltData = await cobaltRes.json();
-        if (cobaltData.url) {
-          onProgress?.('Downloading video stream...');
-          const videoBlob = await fetchWithProgress(cobaltData.url, onProgress);
-          return {
-            id: shortcode || 'video',
-            sourceUrl: trimmedUrl,
-            videoUrl: cobaltData.url,
-            title: cobaltData.filename || `Reel (${shortcode})`,
-            author: 'Creator',
-            videoBlob,
-          };
-        }
-      }
-    } catch {
-      // Continue to next mirror
-    }
-  }
-
-  // Attempt 4: Embed scraper with multi-cors proxies
-  if (shortcode) {
-    const proxies = [
-      (u: string) => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-      (u: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-    ];
-
-    const embedUrl = `https://www.instagram.com/reel/${shortcode}/embed/captioned/`;
-    for (const proxyFn of proxies) {
-      try {
-        onProgress?.('Checking Instagram embed metadata...');
-        const embedRes = await fetch(proxyFn(embedUrl));
-        if (embedRes.ok) {
-          const html = await embedRes.text();
-          const videoMatch =
-            html.match(/video_url\\":\\"([^"\\]+)/) ||
-            html.match(/src="([^"]+\.mp4[^"]*)"/) ||
-            html.match(/"video_url":"([^"]+)"/);
-
-          if (videoMatch && videoMatch[1]) {
-            const cleanVideoUrl = videoMatch[1].replace(/\\u0026/g, '&').replace(/\\/g, '');
-            onProgress?.('Downloading video stream...');
-            const videoBlob = await fetchWithProgress(cleanVideoUrl, onProgress);
-            return {
-              id: shortcode,
-              sourceUrl: trimmedUrl,
-              videoUrl: cleanVideoUrl,
-              title: `Instagram Reel (${shortcode})`,
-              author: 'Instagram Creator',
-              videoBlob,
-            };
-          }
-        }
-      } catch {
-        // Continue
-      }
-    }
+  } catch {
+    // Continue
   }
 
   // If all automated anonymous downloading fails due to Instagram's bot protection:
@@ -267,7 +268,18 @@ async function fetchWithProgress(
     console.warn('Direct video fetch failed due to CORS, attempting via CORS proxy...');
   }
 
-  // Fallback via CORS proxy
+  // Fallback via Coolify stream proxy
+  try {
+    const coolifyStream = `${DEFAULT_COOLIFY_ENGINE}/api/stream?url=${encodeURIComponent(url)}`;
+    const streamRes = await fetch(coolifyStream);
+    if (streamRes.ok) {
+      return await streamRes.blob();
+    }
+  } catch {
+    // Continue
+  }
+
+  // Fallback via public CORS proxy
   const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
   const proxyRes = await fetch(proxyUrl);
   if (proxyRes.ok) {
