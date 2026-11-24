@@ -38,8 +38,12 @@ def canonical_url(raw):
 
 
 def command(args, timeout):
-    subprocess.run(args, check=True, timeout=timeout, stdin=subprocess.DEVNULL,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    res = subprocess.run(args, timeout=timeout, stdin=subprocess.DEVNULL,
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    if res.returncode != 0:
+        if res.stderr:
+            sys.stderr.write(f"[Subprocess {args[0]} Error]: {res.stderr}\n")
+        raise subprocess.CalledProcessError(res.returncode, args, output=res.stdout, stderr=res.stderr)
 
 
 def process(folder, url):
@@ -47,7 +51,9 @@ def process(folder, url):
     media = folder / "input"
     if url:
         platform_args = ["--impersonate", "chrome"] if urlsplit(url).hostname == "www.instagram.com" else []
-        command(["yt-dlp", *platform_args, "--ignore-config", "--no-playlist", "--no-cache-dir",
+        cookie_file = Path(os.getenv("DATA_DIR", "/data")) / "cookies.txt"
+        cookie_args = ["--cookies", str(cookie_file)] if cookie_file.is_file() else []
+        command(["yt-dlp", *platform_args, *cookie_args, "--ignore-config", "--no-playlist", "--no-cache-dir",
                  "--socket-timeout", "12", "--retries", "1", "--max-filesize", str(MAX_BYTES),
                  "--match-filter", f"!is_live & duration <=? {MAX_SECONDS}", "--no-part",
                  "-f", "ba[protocol=https]/b[acodec!=none][protocol=https]",
