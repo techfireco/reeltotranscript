@@ -47,16 +47,21 @@ def challenge(verifier):
 def transcribe(folder, url):
     # A timed-out downloader and all its children are killed together.
     child_env = {k: os.environ[k] for k in ("PATH", "HOME", "LANG", "HF_HOME", "WHISPER_MODEL") if k in os.environ}
+    # Ensure venv bin is on child PATH
+    venv_bin = str(Path(sys.executable).parent)
+    child_env["PATH"] = venv_bin + ":" + child_env.get("PATH", "")
     proc = subprocess.Popen([sys.executable, "-m", "backend.media", str(folder), url],
                             cwd=ROOT, start_new_session=True, stdout=subprocess.PIPE,
-                            stderr=subprocess.DEVNULL, env=child_env)
+                            stderr=subprocess.PIPE, env=child_env)
     try:
-        data, _ = proc.communicate(timeout=240)
+        data, err = proc.communicate(timeout=240)
     finally:
         if proc.poll() is None:
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
     if proc.returncode or len(data) > 512_000:
+        if err:
+            sys.stderr.write(f"[Transcribe Subprocess Error]: {err.decode('utf-8', errors='ignore')}\n")
         raise ValueError
     return json.loads(data)
 

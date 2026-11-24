@@ -21,13 +21,19 @@ def canonical_url(raw):
     rules = [
         (("instagram.com", "www.instagram.com"), r"/(reels?|p)/([\w-]{1,64})/?", "www.instagram.com"),
         (("youtube.com", "www.youtube.com", "m.youtube.com"), r"/(shorts)/([\w-]{11})/?", "www.youtube.com"),
+        (("youtu.be",), r"/([\w-]{11})/?", "www.youtube.com"),
         (("tiktok.com", "www.tiktok.com"), r"/(@[\w.]{1,32}/video)/(\d{1,24})/?", "www.tiktok.com"),
     ]
     for hosts, pattern, host in rules:
         match = re.fullmatch(pattern, parts.path, re.ASCII)
         if parts.hostname in hosts and match:
-            prefix, code = match.groups()
-            return f"https://{host}/{'reel' if prefix == 'reels' else prefix}/{code}/"
+            groups = match.groups()
+            if len(groups) == 2:
+                prefix, code = groups
+                return f"https://{host}/{'reel' if prefix == 'reels' else prefix}/{code}/"
+            else:
+                code = groups[0]
+                return f"https://{host}/shorts/{code}/"
     raise ValueError
 
 
@@ -71,5 +77,7 @@ def process(folder, url):
 if __name__ == "__main__":
     try:
         print(json.dumps(process(Path(sys.argv[1]), sys.argv[2])))
-    except Exception:
+    except Exception as e:
+        import traceback
+        traceback.print_exc(file=sys.stderr)
         sys.exit(1)
