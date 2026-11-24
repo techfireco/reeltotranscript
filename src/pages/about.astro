@@ -1,69 +1,11 @@
 ---
-import Layout from '../layouts/Layout.astro';
+import Layout from "../layouts/Layout.astro";
 ---
-
-<Layout
-  title="About Us — Reeltotranscript"
-  description="Learn about the Reeltotranscript mission: building private, client-side, zero-cost AI productivity tools for creators and researchers."
-  canonicalPath="/about"
->
-  <div class="max-w-3xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-    <!-- Header -->
-    <div class="mb-12">
-      <p class="text-xs font-semibold uppercase tracking-wider text-[#0066cc] dark:text-[#2997ff] mb-2">Our Mission</p>
-      <h1 class="text-3xl sm:text-5xl font-semibold tracking-tight text-neutral-900 dark:text-white leading-tight">
-        Privacy-First Audio & Video Intelligence
-      </h1>
-      <p class="mt-4 text-base sm:text-lg text-neutral-600 dark:text-neutral-400 leading-relaxed">
-        We believe powerful AI speech-to-text tools should be accessible to everyone, free of charge, and without sacrificing your personal privacy.
-      </p>
-    </div>
-
-    <!-- Content Sections -->
-    <div class="space-y-8 text-sm sm:text-base text-neutral-700 dark:text-neutral-300 leading-relaxed">
-      <div class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800">
-        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Why We Built Reeltotranscript</h2>
-        <p>
-          Every day, millions of creators share brilliant tips, tutorials, and insights across Instagram Reels, TikTok, and YouTube Shorts. Yet turning that spoken audio into readable notes or editing subtitles usually meant:
-        </p>
-        <ul class="list-disc pl-5 mt-3 space-y-1 text-neutral-600 dark:text-neutral-400">
-          <li>Forced subscriptions ($15–$30/month) with strict minute limits.</li>
-          <li>Giving third-party servers unrestricted access to your private audio.</li>
-          <li>Slow rendering queues and bloated user dashboards.</li>
-        </ul>
-        <p class="mt-3">
-          Reeltotranscript solves this by taking advantage of modern browser capabilities (WebAssembly, Web Audio, and Web Workers) to run OpenAI's Whisper model locally on your own machine.
-        </p>
-      </div>
-
-      <div class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800">
-        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Our Core Principles</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-          <div class="p-4 rounded-xl bg-white dark:bg-[#252528] border border-neutral-200/80 dark:border-neutral-700/60">
-            <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">🔒 Absolute Privacy</h3>
-            <p class="text-xs text-neutral-500 mt-1">Your video and voice never leave your device. All inference happens in-memory.</p>
-          </div>
-          <div class="p-4 rounded-xl bg-white dark:bg-[#252528] border border-neutral-200/80 dark:border-neutral-700/60">
-            <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">⚡ Zero Cost & Friction</h3>
-            <p class="text-xs text-neutral-500 mt-1">No sign-up forms, no passwords to remember, and no credit cards requested.</p>
-          </div>
-          <div class="p-4 rounded-xl bg-white dark:bg-[#252528] border border-neutral-200/80 dark:border-neutral-700/60">
-            <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">🌐 Open-Source AI</h3>
-            <p class="text-xs text-neutral-500 mt-1">Built on open-weight neural speech recognition models from OpenAI and Hugging Face.</p>
-          </div>
-          <div class="p-4 rounded-xl bg-white dark:bg-[#252528] border border-neutral-200/80 dark:border-neutral-700/60">
-            <h3 class="font-semibold text-neutral-900 dark:text-white text-sm">🎬 Creator-First Export</h3>
-            <p class="text-xs text-neutral-500 mt-1">Instant .SRT, .VTT, and raw text export for CapCut, Premiere, and social channels.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-6 rounded-2xl bg-neutral-50/80 dark:bg-[#1c1c1e] border border-neutral-200/80 dark:border-neutral-800">
-        <h2 class="text-lg font-semibold text-neutral-900 dark:text-white mb-2">Get in Touch</h2>
-        <p>
-          Have questions, bug reports, or feature ideas? We would love to hear from you. Email our team at <a href="mailto:hello@reeltotranscript.com" class="text-[#0066cc] dark:text-[#2997ff] font-medium hover:underline">hello@reeltotranscript.com</a>.
-        </p>
-      </div>
-    </div>
-  </div>
+<Layout title="About Reeltotranscript — Reeltotranscript" description="How Reeltotranscript turns short-form video into text and timed captions." canonicalPath="/about">
+  <article class="max-w-3xl mx-auto px-5 py-16 leading-relaxed">
+    <h1 class="text-4xl font-semibold">About Reeltotranscript</h1>
+    <section class="my-6"><h2 class="mb-2 text-xl font-semibold">For creators and editors</h2><p>Use a transcript to quote a speaker, prepare show notes or draft captions. Save the result as plain text, SRT or VTT.</p></section>
+    <section class="my-6"><h2 class="mb-2 text-xl font-semibold">How it works</h2><p>Our server retrieves a public clip or accepts your upload and uses Whisper to transcribe the speech. Each signed-in account can complete three transcriptions per day.</p></section>
+    <a class="underline" href="mailto:hello@reeltotranscript.com">hello@reeltotranscript.com</a>
+  </article>
 </Layout>

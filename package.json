@@ -1,23 +1,17 @@
 {
   "name": "reeltotranscript",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Account-limited short-video transcription",
   "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
-    "deploy": "astro build"
+    "preview": "astro preview"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^14.4.9",
     "@astrojs/sitemap": "^3.7.6",
-    "@huggingface/transformers": "^4.3.2",
     "@tailwindcss/vite": "^4.3.5",
     "astro": "^7.4.13",
-    "instagram-url-direct": "^2.0.7",
-    "snapsave-media-downloader": "^2.5.1",
     "tailwindcss": "^4.3.5"
   }
 }

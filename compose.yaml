@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    environment:
+      PUBLIC_ORIGIN: ${PUBLIC_ORIGIN:?Set the public HTTPS origin}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:?Set the OAuth client ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:?Set the OAuth client secret}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:?Set the public widget key}
+      TURNSTILE_SECRET: ${TURNSTILE_SECRET:?Set the verification secret}
+    volumes:
+      - ledger:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=192m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 3g
+    cpus: 2
+    pids_limit: 128
+    restart: unless-stopped
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?Set the tunnel connector token}
+    restart: unless-stopped
+volumes:
+  ledger:

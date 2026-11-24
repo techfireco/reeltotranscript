@@ -4,3 +4,15 @@ dist/
 .wrangler/
 .DS_Store
 *.log
+.env
+.env.*
+.dev.vars*
+*.pem
+*.key
+var/
+__pycache__/
+.venv/
+
+*.ses
+var/
+

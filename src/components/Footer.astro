@@ -5,7 +5,6 @@ const tools = [
   { href: '/', label: 'Instagram Reel to Transcript' },
   { href: '/instagram-reel-to-text', label: 'Reel to Text Converter' },
   { href: '/reel-to-srt', label: 'Reel to SRT Subtitles' },
-  { href: '/reel-audio-extractor', label: 'Reel Audio Extractor' },
   { href: '/youtube-shorts-transcript', label: 'YouTube Shorts Transcript' },
   { href: '/tiktok-transcript', label: 'TikTok Video Transcript' },
 ];
@@ -24,28 +23,18 @@ const legal = [
     <div class="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-neutral-200 dark:border-neutral-800">
       <!-- Col 1: About & Technology -->
       <div class="md:col-span-2 space-y-3">
-        <div class="flex items-center gap-2">
+        <a href="/" class="inline-flex items-center gap-2">
           <div class="w-6 h-6 rounded-lg bg-[#0066cc] dark:bg-[#2997ff] flex items-center justify-center text-white">
             <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
             </svg>
           </div>
           <span class="font-semibold text-neutral-900 dark:text-white text-sm">Reeltotranscript</span>
-        </div>
+        </a>
         <p class="leading-relaxed max-w-md text-neutral-600 dark:text-neutral-400">
-          The privacy-first micro tool for converting Instagram Reels, TikToks, and short videos into clean text and SRT subtitle files. Powered by client-side OpenAI Whisper running directly in your browser.
+          Turn short videos into text and timed subtitles. Three free transcriptions per account each day.
         </p>
-        <div class="pt-2 flex items-center gap-3">
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-            Client-Side AI
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-            OpenAI Whisper
-          </span>
-          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] bg-neutral-200/70 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300">
-            Zero Data Stored
-          </span>
-        </div>
+
       </div>
 
       <!-- Col 2: Free Micro Tools -->
@@ -85,11 +74,10 @@ const legal = [
     <!-- Bottom Legal Notice & Disclaimer -->
     <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px] text-neutral-500">
       <p>
-        © {currentYear} Reeltotranscript. All rights reserved. Not affiliated with Instagram, Meta, TikTok, or ByteDance.
+        © <span id="copyright-year">{currentYear}</span> Reeltotranscript. All rights reserved. Not affiliated with Instagram, Meta, TikTok, or ByteDance.
       </p>
       <p class="flex items-center gap-4">
-        <span>Runs locally on Web Audio & Web Workers</span>
-        <span>·</span>
+
         <a href="/privacy" class="hover:underline">Privacy</a>
         <span>·</span>
         <a href="/terms" class="hover:underline">Terms</a>
@@ -97,3 +85,8 @@ const legal = [
     </div>
   </div>
 </footer>
+
+<script>
+  const year = document.getElementById('copyright-year');
+  if (year) year.textContent = String(new Date().getFullYear());
+</script>

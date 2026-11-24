@@ -9,7 +9,6 @@ const navLinks = [
   { href: '/', label: 'Reel to Transcript' },
   { href: '/instagram-reel-to-text', label: 'Reel to Text' },
   { href: '/reel-to-srt', label: 'Reel to SRT' },
-  { href: '/reel-audio-extractor', label: 'Audio Extractor' },
   { href: '/youtube-shorts-transcript', label: 'Shorts' },
   { href: '/tiktok-transcript', label: 'TikTok' },
 ];
@@ -30,7 +29,7 @@ const navLinks = [
     </a>
 
     <!-- Desktop Nav Links -->
-    <nav class="hidden md:flex items-center gap-1 text-[13px] font-medium text-neutral-600 dark:text-neutral-400">
+    <nav class="hidden lg:flex items-center gap-1 text-[13px] font-medium text-neutral-600 dark:text-neutral-400">
       {navLinks.map((link) => {
         const isActive = currentPath === link.href;
         return (
@@ -50,10 +49,7 @@ const navLinks = [
 
     <!-- Right Controls: Theme Toggle & Status Pill -->
     <div class="flex items-center gap-2.5">
-      <div class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/40">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        100% Free & Client-Side
-      </div>
+
 
       <!-- Theme Switcher -->
       <button
@@ -75,8 +71,8 @@ const navLinks = [
       <button
         id="mobile-menu-btn"
         type="button"
-        aria-label="Toggle mobile menu"
-        class="md:hidden w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
+        aria-label="Toggle mobile menu" aria-expanded="false" aria-controls="mobile-menu"
+        class="lg:hidden w-9 h-9 rounded-full flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -86,7 +82,7 @@ const navLinks = [
   </div>
 
   <!-- Mobile Dropdown Menu -->
-  <div id="mobile-menu" class="hidden md:hidden px-4 pt-2 pb-4 bg-white/95 dark:bg-black/95 border-b border-neutral-200 dark:border-neutral-800 space-y-1">
+  <div id="mobile-menu" class="hidden lg:hidden px-4 pt-2 pb-4 bg-white/95 dark:bg-black/95 border-b border-neutral-200 dark:border-neutral-800 space-y-1">
     {navLinks.map((link) => (
       <a
         href={link.href}
@@ -103,7 +99,8 @@ const navLinks = [
   const menuBtn = document.getElementById('mobile-menu-btn');
   const mobileMenu = document.getElementById('mobile-menu');
   menuBtn?.addEventListener('click', () => {
-    mobileMenu?.classList.toggle('hidden');
+    const hidden = mobileMenu?.classList.toggle('hidden');
+    menuBtn.setAttribute('aria-expanded', String(!hidden));
   });
 
   // Dark mode toggle
