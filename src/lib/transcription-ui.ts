@@ -19,7 +19,39 @@ let remaining = 0;
 let busy = false;
 let widget: string | undefined;
 let output: Result | null = null;
+let rawTranscript = '';
 let retryKey = '';
+
+type ViewMode = 'text' | 'timestamps' | 'srt';
+let currentTab: ViewMode = 'text';
+
+function switchViewTab(mode: ViewMode) {
+  currentTab = mode;
+  const transcriptEl = byId('transcript-text');
+  const segmentsEl = byId('segments');
+  const srtEl = byId('srt-preview');
+
+  if (transcriptEl) transcriptEl.classList.toggle('hidden', mode !== 'text');
+  if (segmentsEl) segmentsEl.classList.toggle('hidden', mode !== 'timestamps');
+  if (srtEl) srtEl.classList.toggle('hidden', mode !== 'srt');
+
+  const tabButtons: Record<ViewMode, HTMLElement | null> = {
+    text: byId('view-tab-text'),
+    timestamps: byId('view-tab-timestamps'),
+    srt: byId('view-tab-srt'),
+  };
+
+  for (const [k, btn] of Object.entries(tabButtons)) {
+    if (!btn) continue;
+    const isActive = k === mode;
+    btn.className = `view-tab px-3 py-1.5 rounded-lg transition ${
+      isActive
+        ? 'bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-xs font-semibold'
+        : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white font-medium'
+    }`;
+  }
+}
+
 const update = () => { submit.disabled = busy || !token || remaining <= 0; };
 const quota = () => { accountStatus.textContent = remaining + ' of 3 free transcriptions available. Resets at midnight IST.'; };
 const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -67,12 +99,28 @@ async function watch(job: string) {
     quota();
     if (data.state !== 'done') throw new Error(data.error);
     output = data as Result;
+    rawTranscript = output.text;
     byId('transcript-text').textContent = output.text;
+    byId('view-mode-indicator').textContent = 'Full Speech-to-Text';
+    byId('ai-reset-btn')?.classList.add('hidden');
+
     byId('segments').replaceChildren(...output.chunks.map(chunk => {
       const row = document.createElement('li');
-      row.textContent = formatVTTTimestamp(chunk.timestamp[0]).slice(3, 8) + '  ' + chunk.text;
+      row.className = 'flex items-start gap-2.5 p-2 rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition';
+      const badge = document.createElement('span');
+      badge.className = 'font-mono text-xs font-semibold px-2 py-0.5 rounded bg-[#0066cc]/10 dark:bg-[#2997ff]/15 text-[#0066cc] dark:text-[#2997ff] flex-shrink-0';
+      badge.textContent = formatVTTTimestamp(chunk.timestamp[0]).slice(3, 8);
+      const text = document.createElement('span');
+      text.className = 'text-neutral-800 dark:text-neutral-200';
+      text.textContent = chunk.text;
+      row.append(badge, text);
       return row;
     }));
+
+    const srtEl = byId('srt-preview');
+    if (srtEl) srtEl.textContent = chunksToSRT(output.chunks);
+
+    switchViewTab('text');
     byId('result').hidden = false;
     byId('export-notice').textContent = '';
     notice.textContent = 'Transcription complete.';
@@ -146,11 +194,72 @@ byId('logout').addEventListener('click', async () => {
   try { await api('/auth/logout', { method: 'POST' }); sessionStorage.removeItem('pending-transcription'); location.replace('/'); }
   catch (err) { notice.textContent = (err as Error).message; }
 });
-byId('copy').addEventListener('click', async () => {
-  if (!output) return;
-  try { await navigator.clipboard.writeText(output.text); byId('export-notice').textContent = 'Transcript copied.'; }
-  catch { byId('export-notice').textContent = 'Copy unavailable. Select the transcript text to copy it.'; }
+// Segmented View Tabs
+byId('view-tab-text')?.addEventListener('click', () => switchViewTab('text'));
+byId('view-tab-timestamps')?.addEventListener('click', () => switchViewTab('timestamps'));
+byId('view-tab-srt')?.addEventListener('click', () => switchViewTab('srt'));
+
+// AI Smart Tools
+byId('ai-summary-btn')?.addEventListener('click', () => {
+  if (!output || !rawTranscript) return;
+  const sentences = rawTranscript
+    .split(/(?<=[.?!])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 5);
+  const bullets = sentences.slice(0, 5).map(s => `• ${s}`).join('\n');
+  byId('transcript-text').textContent = `=== 📋 KEY TAKEAWAYS & SUMMARY ===\n\n${bullets || rawTranscript}\n\n💡 Summary generated from reel transcript.`;
+  byId('view-mode-indicator').textContent = 'Viewing: Key Takeaways & Summary';
+  byId('ai-reset-btn')?.classList.remove('hidden');
+  switchViewTab('text');
 });
+
+byId('ai-caption-btn')?.addEventListener('click', () => {
+  if (!output || !rawTranscript) return;
+  const hook = rawTranscript.slice(0, 120).trim();
+  const caption = `🔥 "${hook}..."\n\nWatch the full video above! What are your thoughts on this? Drop a comment below 👇\n\n#reels #viral #video #shorts #trending #audio #transcript #contentcreator`;
+  byId('transcript-text').textContent = caption;
+  byId('view-mode-indicator').textContent = 'Viewing: Instagram Caption & Tags';
+  byId('ai-reset-btn')?.classList.remove('hidden');
+  switchViewTab('text');
+});
+
+byId('ai-clean-btn')?.addEventListener('click', () => {
+  if (!output || !rawTranscript) return;
+  const cleaned = rawTranscript
+    .replace(/\b(um|uh|like|you know|sort of|kind of|basically|actually)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+  byId('transcript-text').textContent = cleaned;
+  byId('view-mode-indicator').textContent = 'Viewing: Cleaned Transcript (Filler Words Removed)';
+  byId('ai-reset-btn')?.classList.remove('hidden');
+  switchViewTab('text');
+});
+
+byId('ai-reset-btn')?.addEventListener('click', () => {
+  if (!output || !rawTranscript) return;
+  byId('transcript-text').textContent = rawTranscript;
+  byId('view-mode-indicator').textContent = 'Full Speech-to-Text';
+  byId('ai-reset-btn')?.classList.add('hidden');
+  switchViewTab('text');
+});
+
+// Copy & Export
+byId('copy')?.addEventListener('click', async () => {
+  if (!output) return;
+  let textToCopy = byId('transcript-text')?.textContent || '';
+  if (currentTab === 'timestamps') {
+    textToCopy = output.chunks.map(c => `[${formatVTTTimestamp(c.timestamp[0]).slice(3, 8)}] ${c.text}`).join('\n');
+  } else if (currentTab === 'srt') {
+    textToCopy = chunksToSRT(output.chunks);
+  }
+  try {
+    await navigator.clipboard.writeText(textToCopy);
+    byId('export-notice').textContent = 'Copied to clipboard.';
+  } catch {
+    byId('export-notice').textContent = 'Copy unavailable. Select text to copy.';
+  }
+});
+
 document.querySelectorAll<HTMLButtonElement>('[data-format]').forEach(button => button.onclick = () => {
   if (!output) return;
   const format = button.dataset.format!;

@@ -34,15 +34,63 @@ const { headline, subheadline } = Astro.props;
     <p id="notice" role="status" aria-live="polite" class="mt-3 text-sm"></p>
     <noscript>Enable JavaScript to sign in and transcribe a clip.</noscript>
   </div>
-  <section id="result" hidden class="mt-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 p-5 sm:p-8">
-    <h2 class="text-2xl font-semibold">Your transcript</h2>
-    <p id="transcript-text" class="my-4 whitespace-pre-wrap leading-relaxed"></p>
-    <details class="mb-5"><summary class="cursor-pointer font-medium">Timestamps</summary><ol id="segments" class="mt-3 space-y-2"></ol></details>
-    <div class="flex flex-wrap gap-2">
-      <button type="button" id="copy" class="action">Copy text</button>
-      {['TXT','SRT','VTT'].map(format => <button type="button" class="action" data-format={format}>Save {format}</button>)}
+  <section id="result" hidden class="mt-6 rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 sm:p-8 shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+      <div>
+        <h2 class="text-2xl font-semibold tracking-tight">Your Transcript</h2>
+        <p id="view-mode-indicator" class="text-xs text-neutral-500 mt-0.5">Full Speech-to-Text</p>
+      </div>
+
+      <!-- Segmented View Switcher -->
+      <div class="inline-flex rounded-xl bg-neutral-100 dark:bg-neutral-800 p-1 border border-neutral-200/80 dark:border-neutral-700/60 text-xs font-medium self-start sm:self-auto">
+        <button id="view-tab-text" type="button" class="view-tab px-3 py-1.5 rounded-lg bg-white dark:bg-neutral-900 text-neutral-900 dark:text-white shadow-xs transition">Transcript</button>
+        <button id="view-tab-timestamps" type="button" class="view-tab px-3 py-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition">Timestamps</button>
+        <button id="view-tab-srt" type="button" class="view-tab px-3 py-1.5 rounded-lg text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition">SRT Preview</button>
+      </div>
     </div>
-    <p id="export-notice" role="status" class="mt-2 text-sm"></p>
+
+    <!-- Main Content Display -->
+    <div class="min-h-[140px] max-h-[460px] overflow-y-auto custom-scrollbar rounded-2xl bg-neutral-50/70 dark:bg-neutral-950/40 p-4 border border-neutral-200/60 dark:border-neutral-800/60 mb-5">
+      <p id="transcript-text" class="whitespace-pre-wrap leading-relaxed select-text text-sm sm:text-base"></p>
+      <ol id="segments" class="space-y-2.5 hidden text-xs sm:text-sm"></ol>
+      <pre id="srt-preview" class="font-mono text-xs text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap leading-relaxed select-text hidden"></pre>
+    </div>
+
+    <!-- AI Smart Tools & Formatting -->
+    <div class="mb-5 p-4 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/40 border border-neutral-200/80 dark:border-neutral-700/60 space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-neutral-900 dark:text-white flex items-center gap-1.5">
+          <svg class="w-4 h-4 text-[#0066cc] dark:text-[#2997ff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          </svg>
+          Smart Tools & Formatting
+        </span>
+        <span class="text-[11px] text-neutral-500">1-click AI formatting</span>
+      </div>
+      <div class="flex flex-wrap gap-2 text-xs">
+        <button id="ai-summary-btn" type="button" class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 font-medium text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition">
+          📋 Key Takeaways & Summary
+        </button>
+        <button id="ai-caption-btn" type="button" class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 font-medium text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition">
+          📱 Generate Instagram Caption & Tags
+        </button>
+        <button id="ai-clean-btn" type="button" class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 font-medium text-neutral-800 dark:text-neutral-200 hover:border-[#0066cc] dark:hover:border-[#2997ff] transition">
+          ✨ Clean Filler Words
+        </button>
+        <button id="ai-reset-btn" type="button" class="px-3 py-1.5 rounded-full bg-white dark:bg-[#252528] border border-neutral-300 dark:border-neutral-700 font-medium text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition hidden">
+          🔄 Restore Original Transcript
+        </button>
+      </div>
+    </div>
+
+    <!-- Export & Copy Actions -->
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="copy" class="action primary">Copy text</button>
+        {['TXT','SRT','VTT'].map(format => <button type="button" class="action" data-format={format}>Save {format}</button>)}
+      </div>
+      <p id="export-notice" role="status" class="text-xs text-neutral-500"></p>
+    </div>
   </section>
 </section>
 <script>
