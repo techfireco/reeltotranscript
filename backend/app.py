@@ -20,7 +20,7 @@ from urllib.request import Request, urlopen
 from flask import Flask, abort, jsonify, redirect, request, send_from_directory
 from werkzeug.exceptions import HTTPException
 
-from .media import MAX_BYTES, canonical_url
+from .media import MAX_BYTES, canonical_url, validate_language
 from .store import Problem, Store, digest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,17 +44,21 @@ def challenge(verifier):
     return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
 
 
-def transcribe(folder, url):
+def transcribe(folder, url, language="auto"):
     # A timed-out downloader and all its children are killed together.
-    child_env = {k: os.environ[k] for k in ("PATH", "HOME", "LANG", "HF_HOME", "WHISPER_MODEL") if k in os.environ}
+    child_env = {
+        k: os.environ[k]
+        for k in ("PATH", "HOME", "LANG", "HF_HOME", "WHISPER_MODEL", "WHISPER_MODEL_HI", "WHISPER_MODEL_HINGLISH")
+        if k in os.environ
+    }
     # Ensure venv bin is on child PATH
     venv_bin = str(Path(sys.executable).parent)
     child_env["PATH"] = venv_bin + ":" + child_env.get("PATH", "")
-    proc = subprocess.Popen([sys.executable, "-m", "backend.media", str(folder), url],
+    proc = subprocess.Popen([sys.executable, "-m", "backend.media", str(folder), url, validate_language(language)],
                             cwd=ROOT, start_new_session=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, env=child_env)
     try:
-        data, err = proc.communicate(timeout=240)
+        data, err = proc.communicate(timeout=300)
     finally:
         if proc.poll() is None:
             os.killpg(proc.pid, signal.SIGKILL)
@@ -222,10 +226,10 @@ def create_app(settings=None):
         response.delete_cookie(session_cookie, **cookie_flags)
         return response
 
-    def run(job, folder, url):
+    def run(job, folder, url, language="auto"):
         state = "failed"
         try:
-            result = transcribe(folder, url)
+            result = transcribe(folder, url, language)
             with lock:
                 results[job] = (time.monotonic() + 900, result)
             state = "done"
@@ -244,6 +248,7 @@ def create_app(settings=None):
             abort(400)
         mime = request.mimetype
         url = ""
+        raw_language = request.args.get("language")
         if mime == "application/json":
             if request.content_length is None or request.content_length > 4096:
                 abort(413)
@@ -252,10 +257,16 @@ def create_app(settings=None):
                 url = canonical_url(body.get("url") if isinstance(body, dict) else None)
             except ValueError:
                 raise Problem(400, "Enter a public Instagram Reel, TikTok video or YouTube Shorts link.")
+            if raw_language is None and isinstance(body, dict):
+                raw_language = body.get("language")
         elif mime != "application/octet-stream":
             raise Problem(415, "Choose a supported audio or video file.")
         elif request.content_length is None or not 0 < request.content_length <= MAX_BYTES:
             raise Problem(413, "Choose a file of up to 25 MiB.")
+        try:
+            language = validate_language(raw_language)
+        except ValueError:
+            raise Problem(400, "Choose Auto Detect, English, Hindi, or Hinglish.")
         token = request.headers.get("X-Challenge-Token", "")
         if not dev_mode:
             if not ready() or not 0 < len(token) <= 2048:
@@ -272,7 +283,7 @@ def create_app(settings=None):
                 if not url:
                     with (folder / "input").open("xb") as out:
                         shutil.copyfileobj(request.stream, out, 64 * 1024)
-                pool.submit(run, job, folder, url)
+                pool.submit(run, job, folder, url, language)
             except Exception:
                 if folder:
                     shutil.rmtree(folder, ignore_errors=True)

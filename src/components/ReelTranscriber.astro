@@ -26,7 +26,33 @@ const { headline, subheadline } = Astro.props;
         <label id="file-panel" class="block" hidden>Choose audio or video
           <input id="clip-file" class="field" type="file" accept=".mp4,.mov,.m4a,.webm,.mp3,.wav" disabled />
         </label>
-        <p class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">Up to 3 minutes and 25 MiB. Only submit media you have permission to process.</p>
+        <div class="mt-4">
+          <span class="block text-sm font-semibold mb-2">Spoken language &amp; AI model</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <label class="cursor-pointer rounded-2xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/70 dark:bg-neutral-800/40 px-3 py-2.5 transition has-[:checked]:border-[#0066cc] has-[:checked]:bg-[#0066cc]/8 dark:has-[:checked]:border-[#2997ff] dark:has-[:checked]:bg-[#2997ff]/15">
+              <input type="radio" name="language" value="auto" class="sr-only" checked />
+              <span class="block font-semibold text-neutral-900 dark:text-white">Auto Detect</span>
+              <span class="block text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Any language</span>
+            </label>
+            <label class="cursor-pointer rounded-2xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/70 dark:bg-neutral-800/40 px-3 py-2.5 transition has-[:checked]:border-[#0066cc] has-[:checked]:bg-[#0066cc]/8 dark:has-[:checked]:border-[#2997ff] dark:has-[:checked]:bg-[#2997ff]/15">
+              <input type="radio" name="language" value="en" class="sr-only" />
+              <span class="block font-semibold text-neutral-900 dark:text-white">English</span>
+              <span class="block text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Fast &amp; crisp</span>
+            </label>
+            <label class="cursor-pointer rounded-2xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/70 dark:bg-neutral-800/40 px-3 py-2.5 transition has-[:checked]:border-[#0066cc] has-[:checked]:bg-[#0066cc]/8 dark:has-[:checked]:border-[#2997ff] dark:has-[:checked]:bg-[#2997ff]/15">
+              <input type="radio" name="language" value="hi" class="sr-only" />
+              <span class="block font-semibold text-neutral-900 dark:text-white">Hindi (हिन्दी)</span>
+              <span class="block text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Devanagari script</span>
+            </label>
+            <label class="cursor-pointer rounded-2xl border border-neutral-200 dark:border-neutral-700/80 bg-neutral-50/70 dark:bg-neutral-800/40 px-3 py-2.5 transition has-[:checked]:border-[#0066cc] has-[:checked]:bg-[#0066cc]/8 dark:has-[:checked]:border-[#2997ff] dark:has-[:checked]:bg-[#2997ff]/15">
+              <input type="radio" name="language" value="hinglish" class="sr-only" />
+              <span class="block font-semibold text-neutral-900 dark:text-white">Hinglish</span>
+              <span class="block text-[11px] text-neutral-500 dark:text-neutral-400 mt-0.5">Apex Hinglish AI</span>
+            </label>
+          </div>
+          <p id="language-hint" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">Automatically detects the spoken language.</p>
+        </div>
+        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Up to 3 minutes and 25 MiB. Only submit media you have permission to process.</p>
         <div id="challenge" class="mt-4"></div>
         <button class="action primary mt-4" id="submit" type="submit" disabled>Transcribe</button>
       </fieldset>

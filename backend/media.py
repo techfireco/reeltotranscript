@@ -11,6 +11,21 @@ from urllib.parse import urlsplit
 MAX_BYTES = 25 * 1024 * 1024
 MAX_SECONDS = 180
 
+LANGUAGE_MODELS = {
+    "auto": ("WHISPER_MODEL", "base", None),
+    "en": ("WHISPER_MODEL", "base", "en"),
+    "hi": ("WHISPER_MODEL_HI", "collabora/faster-whisper-small-hindi", "hi"),
+    "hinglish": ("WHISPER_MODEL_HINGLISH", "abhayhadez/anchor-hinglish-apex-ct2", "en"),
+}
+
+
+def validate_language(raw):
+    if raw is None or raw == "":
+        return "auto"
+    if not isinstance(raw, str) or raw not in LANGUAGE_MODELS:
+        raise ValueError
+    return raw
+
 
 def canonical_url(raw):
     if not isinstance(raw, str) or len(raw) > 2048:
@@ -46,7 +61,9 @@ def command(args, timeout):
         raise subprocess.CalledProcessError(res.returncode, args, output=res.stdout, stderr=res.stderr)
 
 
-def process(folder, url):
+def process(folder, url, language="auto"):
+    lang_key = validate_language(language)
+    env_name, default_model, whisper_lang = LANGUAGE_MODELS[lang_key]
     resource.setrlimit(resource.RLIMIT_FSIZE, (MAX_BYTES, MAX_BYTES))
     media = folder / "input"
     if url:
@@ -70,19 +87,27 @@ def process(folder, url):
     with wave.open(str(wav), "rb") as audio:
         if not 0 < audio.getnframes() <= MAX_SECONDS * audio.getframerate():
             raise ValueError
+    model_ref = os.environ.get(env_name) or default_model
+    local_only = model_ref.startswith("/") or Path(model_ref).is_dir()
     from faster_whisper import WhisperModel
-    model = WhisperModel(os.environ.get("WHISPER_MODEL", "base"), device="cpu",
-                         compute_type="int8", cpu_threads=2, local_files_only=True)
-    segments, _ = model.transcribe(str(wav), beam_size=1, vad_filter=True)
+    model = WhisperModel(model_ref, device="cpu", compute_type="int8",
+                         cpu_threads=2, local_files_only=local_only)
+    segments, info = model.transcribe(str(wav), language=whisper_lang, beam_size=1, vad_filter=True)
     chunks = [{"timestamp": [s.start, s.end], "text": s.text.strip()} for s in segments if s.text.strip()]
     if not chunks:
         raise ValueError
-    return {"text": " ".join(s["text"] for s in chunks), "chunks": chunks}
+    return {
+        "text": " ".join(s["text"] for s in chunks),
+        "chunks": chunks,
+        "language": lang_key,
+        "detectedLanguage": getattr(info, "language", None),
+    }
 
 
 if __name__ == "__main__":
     try:
-        print(json.dumps(process(Path(sys.argv[1]), sys.argv[2])))
+        lang = sys.argv[3] if len(sys.argv) > 3 else "auto"
+        print(json.dumps(process(Path(sys.argv[1]), sys.argv[2], lang)))
     except Exception as e:
         import traceback
         traceback.print_exc(file=sys.stderr)

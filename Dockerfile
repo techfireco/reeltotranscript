@@ -12,9 +12,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg ca-certi
 WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-ENV WHISPER_MODEL=/opt/models/base DATA_DIR=/data WORK_DIR=/tmp/jobs PYTHONDONTWRITEBYTECODE=1
-RUN python -c "from faster_whisper.utils import download_model; download_model('base', output_dir='/opt/models/base')" \
- && useradd --uid 10001 --create-home app && mkdir /data && chown app:app /data
+RUN python -c "from faster_whisper.utils import download_model; download_model('base', output_dir='/opt/models/base')"
+RUN python -c "from faster_whisper.utils import download_model; download_model('collabora/faster-whisper-small-hindi', output_dir='/opt/models/hindi')"
+RUN python -c "from faster_whisper.utils import download_model; download_model('abhayhadez/anchor-hinglish-apex-ct2', output_dir='/opt/models/hinglish')"
+RUN useradd --uid 10001 --create-home app && mkdir /data && chown app:app /data && chmod -R a+rX /opt/models
+ENV WHISPER_MODEL=/opt/models/base \
+    WHISPER_MODEL_HI=/opt/models/hindi \
+    WHISPER_MODEL_HINGLISH=/opt/models/hinglish \
+    DATA_DIR=/data WORK_DIR=/tmp/jobs PYTHONDONTWRITEBYTECODE=1
 COPY --from=web /web/dist dist
 COPY backend backend
 USER app

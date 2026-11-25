@@ -8,6 +8,7 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from backend.app import SESSION, create_app
+from backend.media import validate_language
 from backend.store import Problem
 
 ORIGIN = "https://example.test"
@@ -109,3 +110,43 @@ class ServiceTests(unittest.TestCase):
         self.assertEqual(self.db.remaining("owner"), 0)
         with patch("backend.store.today", return_value="2099-01-01"):
             self.assertEqual(self.db.remaining("owner"), 3)
+
+    def test_language_selection_validation_and_dispatch(self):
+        self.assertEqual(validate_language(None), "auto")
+        self.assertEqual(validate_language(""), "auto")
+        for lang in ("auto", "en", "hi", "hinglish"):
+            self.assertEqual(validate_language(lang), lang)
+        with self.assertRaises(ValueError):
+            validate_language("fr-invalid")
+
+        self.sign_in(self.client)
+        seen = []
+
+        def fake_transcribe(folder, url, language="auto"):
+            seen.append((url, language))
+            return {"text": "Kal subah meeting hai", "chunks": [], "language": language}
+
+        with patch("backend.app.provider_json", return_value=dict(success=True, hostname="example.test", action="transcribe")), \
+             patch("backend.app.transcribe", side_effect=fake_transcribe):
+            bad = self.client.post("/api/transcriptions?language=invalid", base_url=ORIGIN,
+                                   json={"url": "https://www.instagram.com/reels/Example/"},
+                                   headers={"Origin": ORIGIN, "Idempotency-Key": secrets.token_hex(16),
+                                            "X-Challenge-Token": "test"})
+            self.assertEqual(bad.status_code, 400)
+            self.assertEqual(self.client.get("/api/session", base_url=ORIGIN).json["remaining"], 3)
+
+            res1 = self.client.post("/api/transcriptions?language=hinglish", base_url=ORIGIN,
+                                    json={"url": "https://www.instagram.com/reels/Example/"},
+                                    headers={"Origin": ORIGIN, "Idempotency-Key": secrets.token_hex(16),
+                                             "X-Challenge-Token": "test"})
+            self.assertEqual(res1.status_code, 202)
+            self.assertEqual(self.poll(self.client, res1.json["id"])["language"], "hinglish")
+
+            res2 = self.client.post("/api/transcriptions?language=hi", base_url=ORIGIN,
+                                    data=b"FAKEVIDEO", content_type="application/octet-stream",
+                                    headers={"Origin": ORIGIN, "Idempotency-Key": secrets.token_hex(16),
+                                             "X-Challenge-Token": "test"})
+            self.assertEqual(res2.status_code, 202)
+            self.assertEqual(self.poll(self.client, res2.json["id"])["language"], "hi")
+
+        self.assertEqual(seen, [("https://www.instagram.com/reel/Example/", "hinglish"), ("", "hi")])

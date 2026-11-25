@@ -1,6 +1,25 @@
 import { chunksToSRT, chunksToVTT, formatVTTTimestamp } from './subtitles';
 
-type Result = { text: string; chunks: { timestamp: [number, number]; text: string }[] };
+type Result = {
+  text: string;
+  chunks: { timestamp: [number, number]; text: string }[];
+  language?: string;
+  detectedLanguage?: string | null;
+};
+
+const LANGUAGE_HINTS: Record<string, string> = {
+  auto: 'Automatically detects the spoken language.',
+  en: 'Fast transcription optimized for English speech.',
+  hi: 'Dedicated Hindi model outputting Devanagari script (हिन्दी).',
+  hinglish: 'Powered by Apex Hinglish — transcribes Hindi + English mix in Roman script (e.g. "kal meeting hai"). Takes ~25–60s.',
+};
+
+const LANGUAGE_LABELS: Record<string, string> = {
+  auto: 'Auto Detect',
+  en: 'English',
+  hi: 'Hindi (हिन्दी)',
+  hinglish: 'Hinglish (Apex)',
+};
 type Turnstile = {
   render: (el: HTMLElement, options: Record<string, unknown>) => string;
   reset: (id: string) => void;
@@ -20,6 +39,7 @@ let busy = false;
 let widget: string | undefined;
 let output: Result | null = null;
 let rawTranscript = '';
+let activeLanguageLabel = 'Full Speech-to-Text';
 let retryKey = '';
 
 type ViewMode = 'text' | 'timestamps' | 'srt';
@@ -84,9 +104,11 @@ function enableChallenge(siteKey: string) {
   document.head.append(script);
 }
 
-async function watch(job: string) {
+async function watch(job: string, language = 'auto') {
   sessionStorage.setItem('pending-transcription', job);
-  notice.textContent = 'Transcribing. You can refresh this page to check progress.';
+  notice.textContent = language === 'hinglish'
+    ? 'Transcribing with Apex Hinglish AI (usually 25–60s). You can refresh this page to check progress.'
+    : 'Transcribing. You can refresh this page to check progress.';
   for (let attempt = 0; attempt < 180; attempt++) {
     const data = await api('/api/transcriptions/' + encodeURIComponent(job)).catch(err => {
       if (['This transcript has expired.', 'Resource unavailable.'].includes(err.message)) sessionStorage.removeItem('pending-transcription');
@@ -100,8 +122,12 @@ async function watch(job: string) {
     if (data.state !== 'done') throw new Error(data.error);
     output = data as Result;
     rawTranscript = output.text;
+    const langKey = output.language || 'auto';
+    const baseLabel = LANGUAGE_LABELS[langKey] || langKey;
+    const detected = langKey === 'auto' && output.detectedLanguage ? ` · Detected: ${output.detectedLanguage.toUpperCase()}` : '';
+    activeLanguageLabel = `Full Speech-to-Text · ${baseLabel}${detected}`;
     byId('transcript-text').textContent = output.text;
-    byId('view-mode-indicator').textContent = 'Full Speech-to-Text';
+    byId('view-mode-indicator').textContent = activeLanguageLabel;
     byId('ai-reset-btn')?.classList.add('hidden');
 
     byId('segments').replaceChildren(...output.chunks.map(chunk => {
@@ -152,11 +178,16 @@ init().catch(err => { notice.textContent = err.message; if (accountStatus.textCo
 
 form.addEventListener('input', () => { retryKey = ''; });
 form.addEventListener('change', () => {
-  const upload = new FormData(form).get('source') === 'file';
+  retryKey = '';
+  const data = new FormData(form);
+  const upload = data.get('source') === 'file';
   byId('file-panel').hidden = file.disabled = !upload;
   byId('link-panel').hidden = link.disabled = upload;
   file.required = upload;
   link.required = !upload;
+  const lang = String(data.get('language') || 'auto');
+  const hintEl = document.getElementById('language-hint');
+  if (hintEl) hintEl.textContent = LANGUAGE_HINTS[lang] || LANGUAGE_HINTS.auto;
 });
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -167,6 +198,7 @@ form.addEventListener('submit', async event => {
   busy = true;
   const fieldset = form.querySelector('fieldset')!;
   const upload = !file.disabled;
+  const language = String(new FormData(form).get('language') || 'auto');
   fieldset.disabled = true;
   update();
   byId('result').hidden = true;
@@ -174,14 +206,14 @@ form.addEventListener('submit', async event => {
   notice.textContent = 'Submitting your clip…';
   try {
     const pending = sessionStorage.getItem('pending-transcription');
-    if (pending) { await watch(pending); return; }
+    if (pending) { await watch(pending, language); return; }
     retryKey ||= crypto.randomUUID();
-    const data = await api('/api/transcriptions', {
+    const data = await api('/api/transcriptions?language=' + encodeURIComponent(language), {
       method: 'POST', headers: { 'Content-Type': upload ? 'application/octet-stream' : 'application/json',
         'X-Challenge-Token': token, 'Idempotency-Key': retryKey },
-      body: upload ? file.files![0] : JSON.stringify({ url: link.value.trim() }),
+      body: upload ? file.files![0] : JSON.stringify({ url: link.value.trim(), language }),
     });
-    await watch(data.id);
+    await watch(data.id, language);
   } catch (err) {
     notice.textContent = err instanceof Error ? err.message : 'Unable to complete transcription.';
   } finally {
@@ -203,7 +235,7 @@ byId('view-tab-srt')?.addEventListener('click', () => switchViewTab('srt'));
 byId('ai-summary-btn')?.addEventListener('click', () => {
   if (!output || !rawTranscript) return;
   const sentences = rawTranscript
-    .split(/(?<=[.?!])\s+/)
+    .split(/(?<=[.?!\u0964])\s+/)
     .map(s => s.trim())
     .filter(s => s.length > 5);
   const bullets = sentences.slice(0, 5).map(s => `• ${s}`).join('\n');
@@ -238,7 +270,7 @@ byId('ai-clean-btn')?.addEventListener('click', () => {
 byId('ai-reset-btn')?.addEventListener('click', () => {
   if (!output || !rawTranscript) return;
   byId('transcript-text').textContent = rawTranscript;
-  byId('view-mode-indicator').textContent = 'Full Speech-to-Text';
+  byId('view-mode-indicator').textContent = activeLanguageLabel;
   byId('ai-reset-btn')?.classList.add('hidden');
   switchViewTab('text');
 });
