@@ -162,12 +162,14 @@ class ServiceTests(unittest.TestCase):
             canonical_url("https://www.youtube.com/watch?v=bad")
 
         tracks = [
+            {"languageCode": "ar", "baseUrl": "https://www.youtube.com/api/timedtext?v=x&lang=ar"},
             {"languageCode": "hi", "kind": "asr", "baseUrl": "https://www.youtube.com/api/timedtext?v=x&lang=hi"},
             {"languageCode": "en", "baseUrl": "https://www.youtube.com/api/timedtext?v=x&lang=en"},
         ]
         self.assertEqual(select_youtube_track(tracks, "hi")["languageCode"], "hi")
         self.assertEqual(select_youtube_track(tracks, "en")["languageCode"], "en")
-        self.assertEqual(select_youtube_track(tracks, "auto")["languageCode"], "en")
+        self.assertEqual(select_youtube_track(tracks, "auto", default_index=2)["languageCode"], "en")
+        self.assertEqual(select_youtube_track(tracks, "auto", native_lang="en")["languageCode"], "en")
 
         json3 = '{"events":[{"tStartMs":1000,"dDurationMs":6000,"segs":[{"utf8":"Hello "},{"utf8":"world\\n"}]},{"tStartMs":2500,"aAppend":1,"segs":[{"utf8":"\\n"}]},{"tStartMs":3000,"dDurationMs":2000,"segs":[{"utf8":"Next &amp; line"}]}]}'
         chunks = parse_youtube_captions(json3)

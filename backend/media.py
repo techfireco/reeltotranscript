@@ -136,7 +136,22 @@ def build_youtube_opener():
     return urllib.request.build_opener(*handlers)
 
 
-def select_youtube_track(tracks, language):
+def default_youtube_track_info(renderer):
+    audio_tracks = renderer.get("audioTracks") or []
+    idx = renderer.get("defaultAudioTrackIndex")
+    if isinstance(idx, int) and 0 <= idx < len(audio_tracks):
+        entry = audio_tracks[idx]
+    elif audio_tracks:
+        entry = audio_tracks[0]
+    else:
+        return None, None
+    cap_idx = entry.get("defaultCaptionTrackIndex") if entry.get("hasDefaultTrack", True) else None
+    audio_id = entry.get("audioTrackId") or ""
+    native_lang = audio_id.split(".", 1)[0].split("-", 1)[0].lower() if audio_id else None
+    return cap_idx if isinstance(cap_idx, int) else None, native_lang or None
+
+
+def select_youtube_track(tracks, language, default_index=None, native_lang=None):
     if not tracks:
         return None
     prefs = TRACK_PREFS.get(language, [])
@@ -146,6 +161,18 @@ def select_youtube_track(tracks, language):
                 code = (track.get("languageCode") or "").lower()
                 if (track.get("kind") == "asr") == is_asr and (code == target or code.startswith(target + "-")):
                     return track
+    if language == "auto":
+        if isinstance(default_index, int) and 0 <= default_index < len(tracks):
+            return tracks[default_index]
+        if native_lang:
+            for is_asr in (False, True):
+                for track in tracks:
+                    code = (track.get("languageCode") or "").lower()
+                    if (track.get("kind") == "asr") == is_asr and (code == native_lang or code.startswith(native_lang + "-")):
+                        return track
+        for track in tracks:
+            if track.get("kind") == "asr":
+                return track
     for track in tracks:
         if track.get("kind") != "asr":
             return track
@@ -266,14 +293,16 @@ def fetch_youtube_transcript(video_id, language):
         if status != "OK":
             continue
 
-        tracks = player.get("captions", {}).get("playerCaptionsTracklistRenderer", {}).get("captionTracks", [])
+        renderer = player.get("captions", {}).get("playerCaptionsTracklistRenderer", {})
+        tracks = renderer.get("captionTracks", [])
         duration_sec = int(player.get("videoDetails", {}).get("lengthSeconds") or 0)
         if not tracks:
             if 0 < duration_sec <= MAX_SECONDS:
                 return None
             raise MediaError(USER_ERRORS["YOUTUBE_NO_CAPTIONS"])
 
-        track = select_youtube_track(tracks, language)
+        default_idx, native_lang = default_youtube_track_info(renderer)
+        track = select_youtube_track(tracks, language, default_index=default_idx, native_lang=native_lang)
         base_url = track.get("baseUrl", "")
         parsed = urlsplit(base_url)
         if parsed.scheme != "https" or parsed.hostname not in ("www.youtube.com", "youtube.com"):
