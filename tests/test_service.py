@@ -8,7 +8,7 @@ from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
 
 from backend.app import SESSION, create_app
-from backend.media import validate_language
+from backend.media import canonical_url, extract_youtube_id, parse_youtube_captions, select_youtube_track, validate_language
 from backend.store import Problem
 
 ORIGIN = "https://example.test"
@@ -150,3 +150,43 @@ class ServiceTests(unittest.TestCase):
             self.assertEqual(self.poll(self.client, res2.json["id"])["language"], "hi")
 
         self.assertEqual(seen, [("https://www.instagram.com/reel/Example/", "hinglish"), ("", "hi")])
+
+    def test_youtube_url_parsing_track_selection_and_captions(self):
+        self.assertEqual(canonical_url("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s"), "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        self.assertEqual(canonical_url("https://youtu.be/dQw4w9WgXcQ?si=share123"), "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        self.assertEqual(canonical_url("https://www.youtube.com/live/dQw4w9WgXcQ"), "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        self.assertEqual(canonical_url("https://www.youtube.com/shorts/jNQXAC9IVRw"), "https://www.youtube.com/shorts/jNQXAC9IVRw/")
+        self.assertEqual(extract_youtube_id("https://www.youtube.com/watch?v=dQw4w9WgXcQ"), "dQw4w9WgXcQ")
+        self.assertEqual(extract_youtube_id("https://www.instagram.com/reel/Example/"), None)
+        with self.assertRaises(ValueError):
+            canonical_url("https://www.youtube.com/watch?v=bad")
+
+        tracks = [
+            {"languageCode": "hi", "kind": "asr", "baseUrl": "https://www.youtube.com/api/timedtext?v=x&lang=hi"},
+            {"languageCode": "en", "baseUrl": "https://www.youtube.com/api/timedtext?v=x&lang=en"},
+        ]
+        self.assertEqual(select_youtube_track(tracks, "hi")["languageCode"], "hi")
+        self.assertEqual(select_youtube_track(tracks, "en")["languageCode"], "en")
+        self.assertEqual(select_youtube_track(tracks, "auto")["languageCode"], "en")
+
+        json3 = '{"events":[{"tStartMs":1000,"dDurationMs":6000,"segs":[{"utf8":"Hello "},{"utf8":"world\\n"}]},{"tStartMs":2500,"aAppend":1,"segs":[{"utf8":"\\n"}]},{"tStartMs":3000,"dDurationMs":2000,"segs":[{"utf8":"Next &amp; line"}]}]}'
+        chunks = parse_youtube_captions(json3)
+        self.assertEqual(chunks, [
+            {"timestamp": [1.0, 3.0], "text": "Hello world"},
+            {"timestamp": [3.0, 5.0], "text": "Next & line"},
+        ])
+
+        xml_tt3 = '<?xml version="1.0" encoding="utf-8" ?><timedtext format="3"><body><p t="1500" d="1000"><s>First line</s></p></body></timedtext>'
+        self.assertEqual(parse_youtube_captions(xml_tt3), [{"timestamp": [1.5, 2.5], "text": "First line"}])
+        with self.assertRaises(ValueError):
+            parse_youtube_captions('<!DOCTYPE foo><text start="0" dur="1">hi</text>')
+
+    def test_safe_problem_message_surfaced_on_failure(self):
+        self.sign_in(self.client)
+        with patch("backend.app.provider_json", return_value=dict(success=True, hostname="example.test", action="transcribe")), \
+             patch("backend.app.transcribe", side_effect=Problem(422, "Custom safe error")):
+            job = self.submit(self.client).json["id"]
+            res = self.poll(self.client, job)
+            self.assertEqual(res["state"], "failed")
+            self.assertEqual(res["error"], "Custom safe error")
+            self.assertEqual(res["remaining"], 3)

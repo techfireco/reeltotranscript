@@ -48,7 +48,11 @@ def transcribe(folder, url, language="auto"):
     # A timed-out downloader and all its children are killed together.
     child_env = {
         k: os.environ[k]
-        for k in ("PATH", "HOME", "LANG", "HF_HOME", "WHISPER_MODEL", "WHISPER_MODEL_HI", "WHISPER_MODEL_HINGLISH")
+        for k in (
+            "PATH", "HOME", "LANG", "HF_HOME", "DATA_DIR",
+            "WHISPER_MODEL", "WHISPER_MODEL_HI", "WHISPER_MODEL_HINGLISH",
+            "SUPADATA_API_KEY", "YOUTUBE_PROXY", "PROXY_URL",
+        )
         if k in os.environ
     }
     # Ensure venv bin is on child PATH
@@ -63,6 +67,15 @@ def transcribe(folder, url, language="auto"):
         if proc.poll() is None:
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
+    if proc.returncode == 2:
+        try:
+            payload = json.loads(data)
+            msg = payload.get("error")
+            if isinstance(msg, str) and msg:
+                raise Problem(422, msg)
+        except (ValueError, TypeError):
+            pass
+        raise ValueError
     if proc.returncode or len(data) > 512_000:
         if err:
             sys.stderr.write(f"[Transcribe Subprocess Error]: {err.decode('utf-8', errors='ignore')}\n")
@@ -95,14 +108,17 @@ def create_app(settings=None):
             shutil.rmtree(stale)
     pool = ThreadPoolExecutor(max_workers=2)
     results = {}
+    errors = {}
     lock = threading.Lock()
 
     def maintain():
         store.prune()
         with lock:
-            for key, (expiry, _) in list(results.items()):
-                if expiry <= time.monotonic():
-                    del results[key]
+            now = time.monotonic()
+            for bucket in (results, errors):
+                for key, (expiry, _) in list(bucket.items()):
+                    if expiry <= now:
+                        del bucket[key]
 
     def sweeper():
         while True:
@@ -233,6 +249,9 @@ def create_app(settings=None):
             with lock:
                 results[job] = (time.monotonic() + 900, result)
             state = "done"
+        except Problem as exc:
+            with lock:
+                errors[job] = (time.monotonic() + 900, str(exc))
         except Exception:
             pass
         finally:
@@ -256,7 +275,7 @@ def create_app(settings=None):
             try:
                 url = canonical_url(body.get("url") if isinstance(body, dict) else None)
             except ValueError:
-                raise Problem(400, "Enter a public Instagram Reel, TikTok video or YouTube Shorts link.")
+                raise Problem(400, "Enter a public YouTube video, YouTube Short, Instagram Reel, or TikTok link.")
             if raw_language is None and isinstance(body, dict):
                 raw_language = body.get("language")
         elif mime != "application/octet-stream":
@@ -304,8 +323,12 @@ def create_app(settings=None):
             if expires <= time.monotonic():
                 raise Problem(410, "This transcript has expired.")
             return jsonify(state="done", **result, remaining=store.remaining(owner))
-        return jsonify(state=row["state"], error=ERROR if row["state"] == "failed" else None,
-                       remaining=store.remaining(owner))
+        if row["state"] == "failed":
+            with lock:
+                expiry, message = errors.get(job, (0, None))
+            msg = message if expiry > time.monotonic() and message else ERROR
+            return jsonify(state="failed", error=msg, remaining=store.remaining(owner))
+        return jsonify(state=row["state"], error=None, remaining=store.remaining(owner))
 
     @app.get("/")
     @app.get("/<path:path>")

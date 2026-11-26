@@ -5,6 +5,7 @@ type Result = {
   chunks: { timestamp: [number, number]; text: string }[];
   language?: string;
   detectedLanguage?: string | null;
+  source?: string;
 };
 
 const LANGUAGE_HINTS: Record<string, string> = {
@@ -104,11 +105,13 @@ function enableChallenge(siteKey: string) {
   document.head.append(script);
 }
 
-async function watch(job: string, language = 'auto') {
+async function watch(job: string, language = 'auto', isYouTube = false) {
   sessionStorage.setItem('pending-transcription', job);
-  notice.textContent = language === 'hinglish'
-    ? 'Transcribing with Apex Hinglish AI (usually 25–60s). You can refresh this page to check progress.'
-    : 'Transcribing. You can refresh this page to check progress.';
+  notice.textContent = isYouTube
+    ? 'Fetching YouTube captions…'
+    : language === 'hinglish'
+      ? 'Transcribing with Apex Hinglish AI (usually 25–60s). You can refresh this page to check progress.'
+      : 'Transcribing. You can refresh this page to check progress.';
   for (let attempt = 0; attempt < 180; attempt++) {
     const data = await api('/api/transcriptions/' + encodeURIComponent(job)).catch(err => {
       if (['This transcript has expired.', 'Resource unavailable.'].includes(err.message)) sessionStorage.removeItem('pending-transcription');
@@ -124,8 +127,11 @@ async function watch(job: string, language = 'auto') {
     rawTranscript = output.text;
     const langKey = output.language || 'auto';
     const baseLabel = LANGUAGE_LABELS[langKey] || langKey;
-    const detected = langKey === 'auto' && output.detectedLanguage ? ` · Detected: ${output.detectedLanguage.toUpperCase()}` : '';
-    activeLanguageLabel = `Full Speech-to-Text · ${baseLabel}${detected}`;
+    const modePrefix = output.source === 'youtube_captions' ? 'YouTube Subtitles' : 'Full Speech-to-Text';
+    const detected = output.detectedLanguage && (langKey === 'auto' || output.source === 'youtube_captions')
+      ? ` · Detected: ${output.detectedLanguage.toUpperCase()}`
+      : '';
+    activeLanguageLabel = `${modePrefix} · ${baseLabel}${detected}`;
     byId('transcript-text').textContent = output.text;
     byId('view-mode-indicator').textContent = activeLanguageLabel;
     byId('ai-reset-btn')?.classList.add('hidden');
@@ -199,21 +205,22 @@ form.addEventListener('submit', async event => {
   const fieldset = form.querySelector('fieldset')!;
   const upload = !file.disabled;
   const language = String(new FormData(form).get('language') || 'auto');
+  const isYouTube = !upload && /(^|\.)(youtube\.com|youtu\.be)$/i.test((() => { try { return new URL(link.value.trim()).hostname; } catch { return ''; } })());
   fieldset.disabled = true;
   update();
   byId('result').hidden = true;
   output = null;
-  notice.textContent = 'Submitting your clip…';
+  notice.textContent = isYouTube ? 'Fetching YouTube transcript…' : 'Submitting your clip…';
   try {
     const pending = sessionStorage.getItem('pending-transcription');
-    if (pending) { await watch(pending, language); return; }
+    if (pending) { await watch(pending, language, isYouTube); return; }
     retryKey ||= crypto.randomUUID();
     const data = await api('/api/transcriptions?language=' + encodeURIComponent(language), {
       method: 'POST', headers: { 'Content-Type': upload ? 'application/octet-stream' : 'application/json',
         'X-Challenge-Token': token, 'Idempotency-Key': retryKey },
       body: upload ? file.files![0] : JSON.stringify({ url: link.value.trim(), language }),
     });
-    await watch(data.id, language);
+    await watch(data.id, language, isYouTube);
   } catch (err) {
     notice.textContent = err instanceof Error ? err.message : 'Unable to complete transcription.';
   } finally {

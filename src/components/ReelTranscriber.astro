@@ -20,8 +20,8 @@ const { headline, subheadline } = Astro.props;
           <label><input type="radio" name="source" value="link" checked /> Video link</label>
           <label><input type="radio" name="source" value="file" /> Media file</label>
         </div>
-        <label id="link-panel" class="block">Public video link
-          <input id="clip-link" class="field" type="url" inputmode="url" required />
+        <label id="link-panel" class="block">Public YouTube, Reel, or TikTok link
+          <input id="clip-link" class="field" type="url" inputmode="url" placeholder="https://www.youtube.com/watch?v=... or Instagram Reel / TikTok link" required />
         </label>
         <label id="file-panel" class="block" hidden>Choose audio or video
           <input id="clip-file" class="field" type="file" accept=".mp4,.mov,.m4a,.webm,.mp3,.wav" disabled />
@@ -52,7 +52,7 @@ const { headline, subheadline } = Astro.props;
           </div>
           <p id="language-hint" class="mt-1.5 text-xs text-neutral-500 dark:text-neutral-400">Automatically detects the spoken language.</p>
         </div>
-        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">Up to 3 minutes and 25 MiB. Only submit media you have permission to process.</p>
+        <p class="mt-3 text-sm text-neutral-600 dark:text-neutral-400">YouTube links extract subtitles instantly (any length). Instagram Reels, TikTok &amp; uploaded files support up to 3 minutes and 25 MiB.</p>
         <div id="challenge" class="mt-4"></div>
         <button class="action primary mt-4" id="submit" type="submit" disabled>Transcribe</button>
       </fieldset>
